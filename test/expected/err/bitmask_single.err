@@ -1,0 +1,6 @@
+src/err/bitmask_single.asm:5:13: error: a single bit must be be set
+         smb #$81,$12
+             ^
+src/err/bitmask_single.asm:6:13: error: a single bit must be be set
+         rmb #$00,$12
+             ^

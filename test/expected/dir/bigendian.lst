@@ -1,0 +1,17 @@
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: src/dir/bigendian.asm
+
+=$1234					lab     = $1234
+>1000	12 34				        .byte >lab, <lab                ;@ 12 34 /2
+>1002	12 34				        .text bytes(lab, 2)[::-1]       ;@ 12 34 /2   byte rovesciati
+>1004	12 34				        .text x"1234"                   ;@ 12 34 /2   solo costanti
+>1006	12 34 ab cd			        .text bw(lab), bw($abcd)        ;@ 12 34 ab cd /4
+.100a					tab
+>100a	11 11				        .text bw(v)
+>100c	22 22				        .text bw(v)
+>100e	12 34				        .text bw(v)
+>1010	34 12 11 11			        .text bw([$1111, lab])          ;@ 34 12 11 11 /4  ordine sbagliato!
+>1014	48 2c				        .text bits(lab, 16)[::-1]       ;@ 48 2c /2
+
+;******  End of listing

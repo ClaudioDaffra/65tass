@@ -1,0 +1,104 @@
+Analizzando il codice sorgente di **64tass** (il repository che hai indicato), la prima e più importante distinzione da fare è che questo progetto **non utilizza un generatore di parser** come Lex/Yacc (Bison/Flex) o ANTLR. Di conseguenza, **non esiste un file con una grammatica EBNF formale** all'interno del codice sorgente.
+
+Tutta la catena di compilazione (Lexer, Parser, Semantica) è **scritta a mano (hand-coded) interamente in C**. Questo approccio offre prestazioni superiori e un controllo estremamente granulare sugli errori e sulla sintassi specifica e non standardistica tipica degli assembler per 6502/65816.
+
+Ecco un'analisi dettagliata di come 64tass gestisce queste fasi internamente, accompagnata da una ricostruzione dell'EBNF implicito che il codice C implementa.
+
+---
+
+### 1. Lexer (Analisi Lessicale)
+
+Il lexer non opera con espressioni regolari precompilate, ma scorre i caratteri della linea di codice (tipicamente nel file di gestione dell'input/parsing) trasformando il testo grezzo in "Token".
+
+* **Identificatori (Label/Simboli):** Riconosce stringhe alfanumeriche. Gestisce casi specifici come le label locali che iniziano con `_` o le label anonime usate nei loop veloci (`-` e `+`).
+* **Numeri:** Esegue il parsing di base differenti tramite prefissi:
+* `$` per esadecimale (es. `$C000`)
+* `%` per binario (es. `%10101010`)
+* Nessun prefisso per i decimali.
+
+
+* **Operatori:** Riconosce gli operatori algebrici e logici per le espressioni ( `+`, `-`, `*`, `/`, `<<`, `>>`, `&`, `|`, `^`).
+* **Direttive:** Identifica parole chiave che iniziano con il punto `.` (es. `.byte`, `.word`, `.macro`, `.if`).
+
+### 2. Parser (Analisi Sintattica)
+
+Il parser è un classico **Recursive Descent Parser (Parser a discesa ricorsiva)**.
+Legge i token riga per riga. A seconda del primo token trovato, smista l'esecuzione:
+
+1. **Label:** Se rileva un identificatore all'inizio della riga (o seguito da un colon `:`), lo registra nella tabella dei simboli.
+2. **Mnemotecniche:** Cerca il token all'interno di una tabella di istruzioni (es. `LDA`, `STA`, `NOP`). Se lo trova, analizza l'operando per determinare la *modalità di indirizzamento* (Addressing Mode).
+3. **Direttive e Macro:** Se trova un punto `.`, passa il controllo alle funzioni specializzate per le direttive dell'assembler (allocazione memoria, inclusione file, macro-espansione).
+4. **Espressioni:** (Solitamente gestite in un modulo come `expr.c`). Utilizza un algoritmo basato sulla precedenza degli operatori (simile al Pratt parsing) per valutare costanti matematiche, ad esempio risolvendo `(1024 * 2) + $80`.
+
+### 3. Semantica (Generazione ed Espansione)
+
+L'analisi semantica in 64tass si basa su un'architettura **multi-pass** (a passate multiple):
+
+* **Passata 1 (Definizione):** Il sorgente viene scansionato. Le macro vengono espanse. Il program counter (PC) avanza calcolando lo spazio occupato dalle istruzioni. Le label vengono salvate in una Symbol Table con i relativi indirizzi. Le espressioni con "forward reference" (riferimenti a label definite più in basso nel sorgente) vengono lasciate in sospeso.
+* **Passate successive (Risoluzione):** Il codice viene ri-scansionato. Ora che le posizioni di tutte le label sono note, le espressioni vengono valutate definitivamente e viene generato l'opcode binario corretto (es. viene calcolato l'offset relativo per i branch come `BNE` o `BCC`).
+* **Controllo errori:** Verifica se una modalità di indirizzamento è valida per un'istruzione (es. `STA #$00` genererà un errore semantico perché lo Store in modalità immediata non esiste sul 6502).
+
+---
+
+### Ricostruzione della EBNF (Implicita)
+
+Sebbene non esista nel codice, analizzando la sintassi accettata da 64tass, possiamo formalizzare la sua grammatica con la seguente EBNF semplificata:
+
+```ebnf
+<program>        ::= <line>*
+
+<line>           ::= [<label_def>] [<statement>] [<comment>] <newline>
+
+<label_def>      ::= <identifier> | <identifier> ":" | "-" | "+" | "_" <identifier>
+
+<statement>      ::= <instruction> 
+                   | <directive> 
+                   | <macro_call> 
+                   | <assignment>
+
+<assignment>     ::= <identifier> "=" <expression>
+
+<instruction>    ::= <mnemonic> [<operand>]
+
+<operand>        ::= "A"                                   (* Accumulatore *)
+                   | "#" <expression>                      (* Immediato *)
+                   | <expression>                          (* Assoluto, ZeroPage o Relativo *)
+                   | <expression> "," ("X" | "Y" | "x" | "y") (* Indicizzato *)
+                   | "(" <expression> ")"                  (* Indiretto *)
+                   | "(" <expression> "," ("X" | "x") ")"  (* Indiretto Indicizzato pre-X *)
+                   | "(" <expression> ")" "," ("Y" | "y")  (* Indiretto Indicizzato post-Y *)
+                   | "[" <expression> "]"                  (* Long indiretto - specifico 65816 *)
+
+<directive>      ::= "." <dir_name> [<dir_arguments>]
+<dir_name>       ::= "byte" | "word" | "text" | "macro" | "endm" | "if" | "endif" | "org" (* ecc. *)
+
+<expression>     ::= <term> { <binary_op> <term> }
+<term>           ::= <number>
+                   | <identifier>
+                   | "*"                                   (* Program Counter corrente *)
+                   | <string>
+                   | <unary_op> <term>
+                   | "(" <expression> ")"
+
+<binary_op>      ::= "+" | "-" | "*" | "/" | "<<" | ">>" | "&" | "|" | "^"
+<unary_op>       ::= "-" | "~" | "<" | ">"                 (* < e > per estrarre byte basso/alto *)
+
+<mnemonic>       ::= "LDA" | "STA" | "JMP" | "BNE" | "NOP" (* Tutte le mnemonche 65xx *)
+
+<number>         ::= "$" <hex_digits>
+                   | "%" <binary_digits>
+                   | <decimal_digits>
+
+<identifier>     ::= <letter> { <letter> | <digit> | "_" }
+<comment>        ::= ";" <any_character_until_newline>
+
+```
+
+### Riassunto Architetturale del Sorgente
+
+Se vuoi navigare i sorgenti di 64tass alla ricerca di queste logiche, i file chiave (nomi tipici del progetto) sono organizzati così:
+
+* **`main.c` / `tass.c**`: Ciclo principale e gestione delle passate (Pass 1, Pass 2).
+* **`parse.c`**: Gestisce lo smistamento (vede se una riga è una direttiva, un'istruzione o una label).
+* **`instruction.c` / `opcodes.c**`: Contiene gli array con la mappatura *Mnemotecnica -> Opcode Binario -> Addressing modes supportate*.
+* **`expr.c`**: Algoritmo ricorsivo per risolvere formule come `>($C000 + 10)`. Questo è il cuore matematico dell'assembler.

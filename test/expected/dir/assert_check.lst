@@ -1,0 +1,7 @@
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: src/dir/assert_check.asm
+
+.1000	ea		nop		        nop                     ;@ ea /1
+
+;******  End of listing

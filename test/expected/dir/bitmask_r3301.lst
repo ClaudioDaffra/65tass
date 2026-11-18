@@ -1,0 +1,11 @@
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: src/dir/bitmask_r3301.asm
+
+.1000	f7 12		smb 7,$12	        smb #$80,$12            ;@ f7 12 /2      = smb 7,$12
+.1002	07 12		rmb 0,$12	        rmb #$01,$12            ;@ 07 12 /2      = rmb 0,$12
+.1004	6f 12 fd	bbr 6,$12,$1004	        bbr #$40,$12,*          ;@ 6f 12 fd /3   = bbr 6,$12,*
+.1007	bf 12 fd	bbs 3,$12,$1007	        bbs #$08,$12,*          ;@ bf 12 fd /3   = bbs 3,$12,*
+.100a	f7 12		smb 7,$12	        smb 7,$12               ;@ f7 12 /2      forma classica
+
+;******  End of listing

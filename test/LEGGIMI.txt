@@ -1,0 +1,62 @@
+65TASS - SUITE DI TEST (Fase 0 della road map)
+==============================================
+
+Prova che 65tass produca sempre gli stessi byte, listing e messaggi, e
+che la codifica di ogni istruzione corrisponda a una fonte indipendente
+(manuale, documentazione del C65).
+
+COME SI USA (dalla radice del progetto, in WSL)
+  make -f makefileLinuxGCC              compila ./65tass
+  bash test/run_tests.sh                esegue tutti i test
+  bash test/run_tests.sh cpu/4510       solo i test che contengono "cpu/4510"
+  bash test/run_tests.sh --keep         conserva gli output (cartella in $TMPDIR)
+  bash test/run_tests.sh --asm <file>   prova un altro assemblatore
+  bash test/run_tests.sh --update       riscrive gli attesi: SOLO dopo aver
+                                        controllato che il cambiamento e' voluto
+  Esce con 0 se tutto passa. Gli output vanno in una cartella temporanea
+  ($TMPDIR, o /tmp) che viene cancellata alla fine.
+
+CARTELLE
+  src/cpu/    un sorgente per CPU: 6502 (--m65xx), 6502i (--m6502),
+              65c02, r65c02, w65c02, 65816, 65dtv02, 65el02, 65ce02, 4510,
+              45gs02. 4510.asm ha tutti i 256 opcode nell'ordine della
+              tabella della C65 System Specification; 65ce02.asm e' generato
+              da 4510.asm (senza MAP e EOM); 6502.asm ha tutti i 151 opcode.
+  src/dir/    direttive: include once (#24), .assert/.check, big-endian
+              (#28), .option e -B (#30), aggiunte di 65tass (.f88, pf32,
+              .u8...), operatori < > ` sui valori bytes (bug corretto).
+              inc/ contiene i file inclusi.
+  src/err/    casi che devono fallire, con i messaggi attesi.
+  expected/   gli attesi: <nome>.bin (binario senza indirizzo iniziale),
+              <nome>.lst (listing dalla riga ";Offset" in poi: le righe
+              prima contengono comando e data) e <nome>.err (messaggi).
+  tools/check_opcodes.py   controlla le annotazioni ;@ contro il listing.
+
+INTESTAZIONE DI UN SORGENTE (righe facoltative)
+  ;; cpu: --m4510         CPU (predefinita --m65xx)
+  ;; flags: -B            altre opzioni
+  ;; expect: error        il test deve fallire (si confronta solo .err)
+  Opzioni sempre usate: -q -b -o <bin> -L <lst> -E <err>.
+
+ANNOTAZIONI ;@
+  Alla fine di una riga:   lda #$12    ;@ a9 12 /2
+  I byte dopo ;@ sono l'inizio atteso della codifica, /2 la lunghezza
+  totale. Le istruzioni con prefisso del 45GS02 (42 42 ..., EA ...) sono
+  spezzate su piu' righe nel listing: lo script le riunisce.
+  Le annotazioni vengono dalle fonti, non dall'assemblatore: se un byte
+  cambia, il test fallisce anche dopo un --update.
+
+AGGIUNGERE UN TEST
+  1. scrivere src/<gruppo>/<nome>.asm (con ;@ dove serve);
+  2. bash test/run_tests.sh --update <gruppo>/<nome>;
+  3. controllare a mano expected/<gruppo>/<nome>.lst, poi ripetere
+     bash test/run_tests.sh.
+
+NOTE
+  - Se run_tests.sh viene salvato da Windows perde il permesso di
+    esecuzione: usare sempre "bash test/run_tests.sh".
+  - Con il 64tass trunk r3301 originale falliscono solo dir/float65tass e
+    err/float_overflow (provano le aggiunte di 65tass). Con 64tass
+    1.60.3243 falliscono anche i test che usano le novita' del trunk
+    (dir/bitmask_r3301, err/bitmask_single, err/include_twice).
+  - Rapporto completo: roadMap/fase0_rapporto.txt.

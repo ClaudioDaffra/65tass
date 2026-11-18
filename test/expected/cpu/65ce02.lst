@@ -1,0 +1,268 @@
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: src/cpu/65ce02.asm
+
+=$3000					far     = $3000                 ; destinazione lontana: forza i branch a 16 bit
+.2000	00		brk #		        brk                     ;@ 00 /1
+.2001	01 12		ora ($12,x)	        ora ($12,x)             ;@ 01 12 /2
+.2003	02		cle		        cle                     ;@ 02 /1
+.2004	03		see		        see                     ;@ 03 /1
+.2005	04 12		tsb $12		        tsb $12                 ;@ 04 12 /2
+.2007	05 12		ora $12		        ora $12                 ;@ 05 12 /2
+.2009	06 12		asl $12		        asl $12                 ;@ 06 12 /2
+.200b	07 12		rmb 0,$12	        rmb 0,$12               ;@ 07 12 /2
+.200d	08		php		        php                     ;@ 08 /1
+.200e	09 12		ora #$12	        ora #$12                ;@ 09 12 /2
+.2010	0a		asl a		        asl a                   ;@ 0a /1
+.2011	0b		tsy		        tsy                     ;@ 0b /1
+.2012	0c 34 12	tsb $1234	        tsb $1234               ;@ 0c 34 12 /3
+.2015	0d 34 12	ora $1234	        ora $1234               ;@ 0d 34 12 /3
+.2018	0e 34 12	asl $1234	        asl $1234               ;@ 0e 34 12 /3
+.201b	0f 12 fd	bbr 0,$12,$201b	        bbr 0,$12,*             ;@ 0f 12 fd /3
+.201e	10 fe		bpl $201e	        bpl *                   ;@ 10 fe /2
+.2020	11 12		ora ($12),y	        ora ($12),y             ;@ 11 12 /2
+.2022	12 12		ora ($12),z	        ora ($12),z             ;@ 12 12 /2
+.2024	13 da 0f	bpl $3000	        bpl far                 ;@ 13 /3
+.2027	14 12		trb $12		        trb $12                 ;@ 14 12 /2
+.2029	15 12		ora $12,x	        ora $12,x               ;@ 15 12 /2
+.202b	16 12		asl $12,x	        asl $12,x               ;@ 16 12 /2
+.202d	17 12		rmb 1,$12	        rmb 1,$12               ;@ 17 12 /2
+.202f	18		clc		        clc                     ;@ 18 /1
+.2030	19 34 12	ora $1234,y	        ora $1234,y             ;@ 19 34 12 /3
+.2033	1a		inc a		        inc a                   ;@ 1a /1
+.2034	1b		inz		        inz                     ;@ 1b /1
+.2035	1c 34 12	trb $1234	        trb $1234               ;@ 1c 34 12 /3
+.2038	1d 34 12	ora $1234,x	        ora $1234,x             ;@ 1d 34 12 /3
+.203b	1e 34 12	asl $1234,x	        asl $1234,x             ;@ 1e 34 12 /3
+.203e	1f 12 fd	bbr 1,$12,$203e	        bbr 1,$12,*             ;@ 1f 12 fd /3
+.2041	20 34 12	jsr $1234	        jsr $1234               ;@ 20 34 12 /3
+.2044	21 12		and ($12,x)	        and ($12,x)             ;@ 21 12 /2
+.2046	22 34 12	jsr ($1234)	        jsr ($1234)             ;@ 22 34 12 /3
+.2049	23 34 12	jsr ($1234,x)	        jsr ($1234,x)           ;@ 23 34 12 /3
+.204c	24 12		bit $12		        bit $12                 ;@ 24 12 /2
+.204e	25 12		and $12		        and $12                 ;@ 25 12 /2
+.2050	26 12		rol $12		        rol $12                 ;@ 26 12 /2
+.2052	27 12		rmb 2,$12	        rmb 2,$12               ;@ 27 12 /2
+.2054	28		plp		        plp                     ;@ 28 /1
+.2055	29 12		and #$12	        and #$12                ;@ 29 12 /2
+.2057	2a		rol a		        rol a                   ;@ 2a /1
+.2058	2b		tys		        tys                     ;@ 2b /1
+.2059	2c 34 12	bit $1234	        bit $1234               ;@ 2c 34 12 /3
+.205c	2d 34 12	and $1234	        and $1234               ;@ 2d 34 12 /3
+.205f	2e 34 12	rol $1234	        rol $1234               ;@ 2e 34 12 /3
+.2062	2f 12 fd	bbr 2,$12,$2062	        bbr 2,$12,*             ;@ 2f 12 fd /3
+.2065	30 fe		bmi $2065	        bmi *                   ;@ 30 fe /2
+.2067	31 12		and ($12),y	        and ($12),y             ;@ 31 12 /2
+.2069	32 12		and ($12),z	        and ($12),z             ;@ 32 12 /2
+.206b	33 93 0f	bmi $3000	        bmi far                 ;@ 33 /3
+.206e	34 12		bit $12,x	        bit $12,x               ;@ 34 12 /2
+.2070	35 12		and $12,x	        and $12,x               ;@ 35 12 /2
+.2072	36 12		rol $12,x	        rol $12,x               ;@ 36 12 /2
+.2074	37 12		rmb 3,$12	        rmb 3,$12               ;@ 37 12 /2
+.2076	38		sec		        sec                     ;@ 38 /1
+.2077	39 34 12	and $1234,y	        and $1234,y             ;@ 39 34 12 /3
+.207a	3a		dec a		        dec a                   ;@ 3a /1
+.207b	3b		dez		        dez                     ;@ 3b /1
+.207c	3c 34 12	bit $1234,x	        bit $1234,x             ;@ 3c 34 12 /3
+.207f	3d 34 12	and $1234,x	        and $1234,x             ;@ 3d 34 12 /3
+.2082	3e 34 12	rol $1234,x	        rol $1234,x             ;@ 3e 34 12 /3
+.2085	3f 12 fd	bbr 3,$12,$2085	        bbr 3,$12,*             ;@ 3f 12 fd /3
+.2088	40		rti		        rti                     ;@ 40 /1
+.2089	41 12		eor ($12,x)	        eor ($12,x)             ;@ 41 12 /2
+.208b	42		neg a		        neg a                   ;@ 42 /1
+.208c	43		asr a		        asr a                   ;@ 43 /1
+.208d	44 12		asr $12		        asr $12                 ;@ 44 12 /2
+.208f	45 12		eor $12		        eor $12                 ;@ 45 12 /2
+.2091	46 12		lsr $12		        lsr $12                 ;@ 46 12 /2
+.2093	47 12		rmb 4,$12	        rmb 4,$12               ;@ 47 12 /2
+.2095	48		pha		        pha                     ;@ 48 /1
+.2096	49 12		eor #$12	        eor #$12                ;@ 49 12 /2
+.2098	4a		lsr a		        lsr a                   ;@ 4a /1
+.2099	4b		taz		        taz                     ;@ 4b /1
+.209a	4c 34 12	jmp $1234	        jmp $1234               ;@ 4c 34 12 /3
+.209d	4d 34 12	eor $1234	        eor $1234               ;@ 4d 34 12 /3
+.20a0	4e 34 12	lsr $1234	        lsr $1234               ;@ 4e 34 12 /3
+.20a3	4f 12 fd	bbr 4,$12,$20a3	        bbr 4,$12,*             ;@ 4f 12 fd /3
+.20a6	50 fe		bvc $20a6	        bvc *                   ;@ 50 fe /2
+.20a8	51 12		eor ($12),y	        eor ($12),y             ;@ 51 12 /2
+.20aa	52 12		eor ($12),z	        eor ($12),z             ;@ 52 12 /2
+.20ac	53 52 0f	bvc $3000	        bvc far                 ;@ 53 /3
+.20af	54 12		asr $12,x	        asr $12,x               ;@ 54 12 /2
+.20b1	55 12		eor $12,x	        eor $12,x               ;@ 55 12 /2
+.20b3	56 12		lsr $12,x	        lsr $12,x               ;@ 56 12 /2
+.20b5	57 12		rmb 5,$12	        rmb 5,$12               ;@ 57 12 /2
+.20b7	58		cli		        cli                     ;@ 58 /1
+.20b8	59 34 12	eor $1234,y	        eor $1234,y             ;@ 59 34 12 /3
+.20bb	5a		phy		        phy                     ;@ 5a /1
+.20bc	5b		tad		        tad                     ;@ 5b /1   TAB nel manuale C65
+.20bd	5d 34 12	eor $1234,x	        eor $1234,x             ;@ 5d 34 12 /3
+.20c0	5e 34 12	lsr $1234,x	        lsr $1234,x             ;@ 5e 34 12 /3
+.20c3	5f 12 fd	bbr 5,$12,$20c3	        bbr 5,$12,*             ;@ 5f 12 fd /3
+.20c6	60		rts		        rts                     ;@ 60 /1
+.20c7	61 12		adc ($12,x)	        adc ($12,x)             ;@ 61 12 /2
+.20c9	62 12		rts #$12	        rts #$12                ;@ 62 12 /2  RTN nella tabella
+.20cb	63 33 0f	bsr $3000	        bsr far                 ;@ 63 /3
+.20ce	64 12		stz $12		        stz $12                 ;@ 64 12 /2  sul 4510 scrive il registro Z
+.20d0	65 12		adc $12		        adc $12                 ;@ 65 12 /2
+.20d2	66 12		ror $12		        ror $12                 ;@ 66 12 /2
+.20d4	67 12		rmb 6,$12	        rmb 6,$12               ;@ 67 12 /2
+.20d6	68		pla		        pla                     ;@ 68 /1
+.20d7	69 12		adc #$12	        adc #$12                ;@ 69 12 /2
+.20d9	6a		ror a		        ror a                   ;@ 6a /1
+.20da	6b		tza		        tza                     ;@ 6b /1
+.20db	6c 34 12	jmp ($1234)	        jmp ($1234)             ;@ 6c 34 12 /3
+.20de	6d 34 12	adc $1234	        adc $1234               ;@ 6d 34 12 /3
+.20e1	6e 34 12	ror $1234	        ror $1234               ;@ 6e 34 12 /3
+.20e4	6f 12 fd	bbr 6,$12,$20e4	        bbr 6,$12,*             ;@ 6f 12 fd /3
+.20e7	70 fe		bvs $20e7	        bvs *                   ;@ 70 fe /2
+.20e9	71 12		adc ($12),y	        adc ($12),y             ;@ 71 12 /2
+.20eb	72 12		adc ($12),z	        adc ($12),z             ;@ 72 12 /2
+.20ed	73 11 0f	bvs $3000	        bvs far                 ;@ 73 /3
+.20f0	74 12		stz $12,x	        stz $12,x               ;@ 74 12 /2
+.20f2	75 12		adc $12,x	        adc $12,x               ;@ 75 12 /2
+.20f4	76 12		ror $12,x	        ror $12,x               ;@ 76 12 /2
+.20f6	77 12		rmb 7,$12	        rmb 7,$12               ;@ 77 12 /2
+.20f8	78		sei		        sei                     ;@ 78 /1
+.20f9	79 34 12	adc $1234,y	        adc $1234,y             ;@ 79 34 12 /3
+.20fc	7a		ply		        ply                     ;@ 7a /1
+.20fd	7b		tda		        tda                     ;@ 7b /1   TBA nel manuale C65
+.20fe	7c 34 12	jmp ($1234,x)	        jmp ($1234,x)           ;@ 7c 34 12 /3
+.2101	7d 34 12	adc $1234,x	        adc $1234,x             ;@ 7d 34 12 /3
+.2104	7e 34 12	ror $1234,x	        ror $1234,x             ;@ 7e 34 12 /3
+.2107	7f 12 fd	bbr 7,$12,$2107	        bbr 7,$12,*             ;@ 7f 12 fd /3
+.210a	80 fe		bra $210a	        bra *                   ;@ 80 fe /2  BRU nella tabella
+.210c	81 12		sta ($12,x)	        sta ($12,x)             ;@ 81 12 /2
+.210e	82 12		sta ($12,s),y	        sta ($12,s),y           ;@ 82 12 /2  IDSP
+.2110	83 ee 0e	bra $3000	        bra far                 ;@ 83 /3
+.2113	84 12		sty $12		        sty $12                 ;@ 84 12 /2
+.2115	85 12		sta $12		        sta $12                 ;@ 85 12 /2
+.2117	86 12		stx $12		        stx $12                 ;@ 86 12 /2
+.2119	87 12		smb 0,$12	        smb 0,$12               ;@ 87 12 /2
+.211b	88		dey		        dey                     ;@ 88 /1
+.211c	89 12		bit #$12	        bit #$12                ;@ 89 12 /2
+.211e	8a		txa		        txa                     ;@ 8a /1
+.211f	8b 34 12	sty $1234,x	        sty $1234,x             ;@ 8b 34 12 /3
+.2122	8c 34 12	sty $1234	        sty $1234               ;@ 8c 34 12 /3
+.2125	8d 34 12	sta $1234	        sta $1234               ;@ 8d 34 12 /3
+.2128	8e 34 12	stx $1234	        stx $1234               ;@ 8e 34 12 /3
+.212b	8f 12 fd	bbs 0,$12,$212b	        bbs 0,$12,*             ;@ 8f 12 fd /3
+.212e	90 fe		bcc $212e	        bcc *                   ;@ 90 fe /2
+.2130	91 12		sta ($12),y	        sta ($12),y             ;@ 91 12 /2
+.2132	92 12		sta ($12),z	        sta ($12),z             ;@ 92 12 /2
+.2134	93 ca 0e	bcc $3000	        bcc far                 ;@ 93 /3
+.2137	94 12		sty $12,x	        sty $12,x               ;@ 94 12 /2
+.2139	95 12		sta $12,x	        sta $12,x               ;@ 95 12 /2
+.213b	96 12		stx $12,y	        stx $12,y               ;@ 96 12 /2
+.213d	97 12		smb 1,$12	        smb 1,$12               ;@ 97 12 /2
+.213f	98		tya		        tya                     ;@ 98 /1
+.2140	99 34 12	sta $1234,y	        sta $1234,y             ;@ 99 34 12 /3
+.2143	9a		txs		        txs                     ;@ 9a /1
+.2144	9b 34 12	stx $1234,y	        stx $1234,y             ;@ 9b 34 12 /3
+.2147	9c 34 12	stz $1234	        stz $1234               ;@ 9c 34 12 /3
+.214a	9d 34 12	sta $1234,x	        sta $1234,x             ;@ 9d 34 12 /3
+.214d	9e 34 12	stz $1234,x	        stz $1234,x             ;@ 9e 34 12 /3
+.2150	9f 12 fd	bbs 1,$12,$2150	        bbs 1,$12,*             ;@ 9f 12 fd /3
+.2153	a0 12		ldy #$12	        ldy #$12                ;@ a0 12 /2
+.2155	a1 12		lda ($12,x)	        lda ($12,x)             ;@ a1 12 /2
+.2157	a2 12		ldx #$12	        ldx #$12                ;@ a2 12 /2
+.2159	a3 12		ldz #$12	        ldz #$12                ;@ a3 12 /2
+.215b	a4 12		ldy $12		        ldy $12                 ;@ a4 12 /2
+.215d	a5 12		lda $12		        lda $12                 ;@ a5 12 /2
+.215f	a6 12		ldx $12		        ldx $12                 ;@ a6 12 /2
+.2161	a7 12		smb 2,$12	        smb 2,$12               ;@ a7 12 /2
+.2163	a8		tay		        tay                     ;@ a8 /1
+.2164	a9 12		lda #$12	        lda #$12                ;@ a9 12 /2
+.2166	aa		tax		        tax                     ;@ aa /1
+.2167	ab 34 12	ldz $1234	        ldz $1234               ;@ ab 34 12 /3
+.216a	ac 34 12	ldy $1234	        ldy $1234               ;@ ac 34 12 /3
+.216d	ad 34 12	lda $1234	        lda $1234               ;@ ad 34 12 /3
+.2170	ae 34 12	ldx $1234	        ldx $1234               ;@ ae 34 12 /3
+.2173	af 12 fd	bbs 2,$12,$2173	        bbs 2,$12,*             ;@ af 12 fd /3
+.2176	b0 fe		bcs $2176	        bcs *                   ;@ b0 fe /2
+.2178	b1 12		lda ($12),y	        lda ($12),y             ;@ b1 12 /2
+.217a	b2 12		lda ($12),z	        lda ($12),z             ;@ b2 12 /2
+.217c	b3 82 0e	bcs $3000	        bcs far                 ;@ b3 /3
+.217f	b4 12		ldy $12,x	        ldy $12,x               ;@ b4 12 /2
+.2181	b5 12		lda $12,x	        lda $12,x               ;@ b5 12 /2
+.2183	b6 12		ldx $12,y	        ldx $12,y               ;@ b6 12 /2
+.2185	b7 12		smb 3,$12	        smb 3,$12               ;@ b7 12 /2
+.2187	b8		clv		        clv                     ;@ b8 /1
+.2188	b9 34 12	lda $1234,y	        lda $1234,y             ;@ b9 34 12 /3
+.218b	ba		tsx		        tsx                     ;@ ba /1
+.218c	bb 34 12	ldz $1234,x	        ldz $1234,x             ;@ bb 34 12 /3
+.218f	bc 34 12	ldy $1234,x	        ldy $1234,x             ;@ bc 34 12 /3
+.2192	bd 34 12	lda $1234,x	        lda $1234,x             ;@ bd 34 12 /3
+.2195	be 34 12	ldx $1234,y	        ldx $1234,y             ;@ be 34 12 /3
+.2198	bf 12 fd	bbs 3,$12,$2198	        bbs 3,$12,*             ;@ bf 12 fd /3
+.219b	c0 12		cpy #$12	        cpy #$12                ;@ c0 12 /2
+.219d	c1 12		cmp ($12,x)	        cmp ($12,x)             ;@ c1 12 /2
+.219f	c2 12		cpz #$12	        cpz #$12                ;@ c2 12 /2
+.21a1	c3 12		dew $12		        dew $12                 ;@ c3 12 /2
+.21a3	c4 12		cpy $12		        cpy $12                 ;@ c4 12 /2
+.21a5	c5 12		cmp $12		        cmp $12                 ;@ c5 12 /2
+.21a7	c6 12		dec $12		        dec $12                 ;@ c6 12 /2
+.21a9	c7 12		smb 4,$12	        smb 4,$12               ;@ c7 12 /2
+.21ab	c8		iny		        iny                     ;@ c8 /1
+.21ac	c9 12		cmp #$12	        cmp #$12                ;@ c9 12 /2
+.21ae	ca		dex		        dex                     ;@ ca /1
+.21af	cb 34 12	asw $1234	        asw $1234               ;@ cb 34 12 /3
+.21b2	cc 34 12	cpy $1234	        cpy $1234               ;@ cc 34 12 /3
+.21b5	cd 34 12	cmp $1234	        cmp $1234               ;@ cd 34 12 /3
+.21b8	ce 34 12	dec $1234	        dec $1234               ;@ ce 34 12 /3
+.21bb	cf 12 fd	bbs 4,$12,$21bb	        bbs 4,$12,*             ;@ cf 12 fd /3
+.21be	d0 fe		bne $21be	        bne *                   ;@ d0 fe /2
+.21c0	d1 12		cmp ($12),y	        cmp ($12),y             ;@ d1 12 /2
+.21c2	d2 12		cmp ($12),z	        cmp ($12),z             ;@ d2 12 /2
+.21c4	d3 3a 0e	bne $3000	        bne far                 ;@ d3 /3
+.21c7	d4 12		cpz $12		        cpz $12                 ;@ d4 12 /2
+.21c9	d5 12		cmp $12,x	        cmp $12,x               ;@ d5 12 /2
+.21cb	d6 12		dec $12,x	        dec $12,x               ;@ d6 12 /2
+.21cd	d7 12		smb 5,$12	        smb 5,$12               ;@ d7 12 /2
+.21cf	d8		cld		        cld                     ;@ d8 /1
+.21d0	d9 34 12	cmp $1234,y	        cmp $1234,y             ;@ d9 34 12 /3
+.21d3	da		phx		        phx                     ;@ da /1
+.21d4	db		phz		        phz                     ;@ db /1
+.21d5	dc 34 12	cpz $1234	        cpz $1234               ;@ dc 34 12 /3
+.21d8	dd 34 12	cmp $1234,x	        cmp $1234,x             ;@ dd 34 12 /3
+.21db	de 34 12	dec $1234,x	        dec $1234,x             ;@ de 34 12 /3
+.21de	df 12 fd	bbs 5,$12,$21de	        bbs 5,$12,*             ;@ df 12 fd /3
+.21e1	e0 12		cpx #$12	        cpx #$12                ;@ e0 12 /2
+.21e3	e1 12		sbc ($12,x)	        sbc ($12,x)             ;@ e1 12 /2
+.21e5	e2 12		lda ($12,s),y	        lda ($12,s),y           ;@ e2 12 /2  IDSP
+.21e7	e3 12		inw $12		        inw $12                 ;@ e3 12 /2  [doc] zp, non $nnnn
+.21e9	e4 12		cpx $12		        cpx $12                 ;@ e4 12 /2
+.21eb	e5 12		sbc $12		        sbc $12                 ;@ e5 12 /2
+.21ed	e6 12		inc $12		        inc $12                 ;@ e6 12 /2
+.21ef	e7 12		smb 6,$12	        smb 6,$12               ;@ e7 12 /2
+.21f1	e8		inx		        inx                     ;@ e8 /1
+.21f2	e9 12		sbc #$12	        sbc #$12                ;@ e9 12 /2
+.21f4	ea		nop		        nop                     ;@ ea /1   EOM dopo un MAP
+.21f5	eb 34 12	rlw $1234	        rlw $1234               ;@ eb 34 12 /3  ROW (ruota a sinistra)
+.21f8	ec 34 12	cpx $1234	        cpx $1234               ;@ ec 34 12 /3
+.21fb	ed 34 12	sbc $1234	        sbc $1234               ;@ ed 34 12 /3
+.21fe	ee 34 12	inc $1234	        inc $1234               ;@ ee 34 12 /3
+.2201	ef 12 fd	bbs 6,$12,$2201	        bbs 6,$12,*             ;@ ef 12 fd /3
+.2204	f0 fe		beq $2204	        beq *                   ;@ f0 fe /2
+.2206	f1 12		sbc ($12),y	        sbc ($12),y             ;@ f1 12 /2
+.2208	f2 12		sbc ($12),z	        sbc ($12),z             ;@ f2 12 /2
+.220a	f3 f4 0d	beq $3000	        beq far                 ;@ f3 /3
+.220d	f4 34 12	phw #$1234	        phw #$1234              ;@ f4 34 12 /3  [doc] "PHD IMM"
+.2210	f5 12		sbc $12,x	        sbc $12,x               ;@ f5 12 /2
+.2212	f6 12		inc $12,x	        inc $12,x               ;@ f6 12 /2
+.2214	f7 12		smb 7,$12	        smb 7,$12               ;@ f7 12 /2
+.2216	f8		sed		        sed                     ;@ f8 /1
+.2217	f9 34 12	sbc $1234,y	        sbc $1234,y             ;@ f9 34 12 /3
+.221a	fa		plx		        plx                     ;@ fa /1
+.221b	fb		plz		        plz                     ;@ fb /1
+.221c	fc 34 12	phw $1234	        phw $1234               ;@ fc 34 12 /3  [doc] "PHD ABS"
+.221f	fd 34 12	sbc $1234,x	        sbc $1234,x             ;@ fd 34 12 /3
+.2222	fe 34 12	inc $1234,x	        inc $1234,x             ;@ fe 34 12 /3
+.2225	ff 12 fd	bbs 7,$12,$2225	        bbs 7,$12,*             ;@ ff 12 fd /3
+.2228	5b		tad		        tab                     ;@ 5b /1
+.2229	7b		tda		        tba                     ;@ 7b /1
+.222a	eb 34 12	rlw $1234	        row $1234               ;@ eb 34 12 /3
+.222d	62 12		rts #$12	        rtn #$12                ;@ 62 12 /2
+.2400	63 fe ff	bsr $2400	        bsr $2400               ;@ 63 fe ff /3   $2400-($2400+2)
+.2403	83 fb 00	bra $2500	        bra $2500               ;@ 83 fb 00 /3   $2500-($2403+2)
+
+;******  End of listing

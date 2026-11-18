@@ -1,0 +1,9 @@
+src/err/float_overflow.asm:4:15: error: too large for a 16 bit signed integer float '51200.0'
+         .f88  200.0             ; 200*256 non sta in 16 bit con segno
+               ^
+src/err/float_overflow.asm:5:15: error: too large for a 16 bit signed integer float '-32776.0'
+         .f124 -2048.5           ; sotto -2048
+               ^
+src/err/float_overflow.asm:6:15: error: too large for a 8 bit unsigned integer int '256'
+         .u8   256               ; come .byte: fuori campo
+               ^

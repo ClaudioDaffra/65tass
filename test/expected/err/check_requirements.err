@@ -1,0 +1,9 @@
+src/err/check_requirements.asm:6:9: error: requirements not met
+         .check %0100, %0000     ; requirements not met
+         ^
+src/err/check_requirements.asm:7:9: error: conflict
+         .check %0000, %0001     ; conflict
+         ^
+src/err/check_requirements.asm:8:9: error: programma troppo lungo di $0001 byte
+         .cerror * == $1000, "programma troppo lungo di ", * - $0fff, " byte"
+         ^

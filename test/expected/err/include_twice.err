@@ -1,0 +1,16 @@
+In file included from src/err/include_twice.asm:5:9:
+src/err/../dir/inc/noguard.inc:2:1: error: duplicate definition 'K_TWO'
+ K_TWO   = 2
+ ^
+In file included from src/err/include_twice.asm:4:9:
+src/err/../dir/inc/noguard.inc:2:1: note: original definition of 'K_TWO' was here
+ K_TWO   = 2
+ ^
+In file included from src/err/include_twice.asm:5:9:
+src/err/../dir/inc/noguard.inc:3:1: error: duplicate definition 'helper2'
+ helper2 rts
+ ^
+In file included from src/err/include_twice.asm:4:9:
+src/err/../dir/inc/noguard.inc:3:1: note: original definition of 'helper2' was here
+ helper2 rts
+ ^

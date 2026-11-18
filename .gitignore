@@ -1,0 +1,53 @@
+# High Level Assembler
+#
+# Minimalistic .gitignore
+#
+
+# Object files
+*.o
+*.os
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.a
+*.la
+*.lo
+*.lib
+*.lai
+*.def
+*.exp
+*.slo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Logs
+*.log
+
+# Executables
+a.out
+/65tass
+/65tass.exe
+
+# Other
+.DS_Store
+*.dSYM
+.*.swp
+.*.swa
+
+# Autotools
+.deps
+.dirstamp
+autom4te.cache
+config.status
+config.log
+stamp-h1

@@ -1,0 +1,408 @@
+65TASS - FASE 0 (PREPARAZIONE): RAPPORTO DI ANALISI
+===================================================
+
+Data: 2026-11-18. Progetto: /home/claudio/65tass (git, origin
+github.com/claudiodaffra/65tass, commit b0fac31 + file nuovi non ancora
+committati). Riferimenti scaricati: /home/claudio/65tass_ref (fuori dal
+progetto). Documentazione C65: C:\prj\c65doc.
+
+SINTESI
+-------
+- 65tass compila senza errori e senza avvisi (GCC 15.2, anche con
+  -Wall -Wextra) ed e' 64tass 1.60.3243 piu' le aggiunte di 65tass.
+- Le aggiunte non cambiano il comportamento di base: sulla nuova suite di
+  test il 64tass originale 1.60.3243 da' gli stessi byte e listing di
+  65tass in 17 test su 19. I 2 test che cambiano provano le aggiunte.
+- Su SourceForge c'e' un trunk piu' nuovo (SVN r3301, 2026-11-08, versione
+  "1.60.3243+", mai rilasciato). Contiene correzioni e la richiesta #31 gia'
+  fatta. E' stato fuso in 65tass lo stesso giorno (punto 9): ora 65tass =
+  trunk r3301 + aggiunte di 65tass.
+- Tracker: #31 e' fatto nel trunk. #15, #20, #24, #28, #29 e #30 sono
+  ancora aperti. Per #24 l'autore indica una soluzione nel sorgente, che
+  funziona.
+- Manuale: non esiste .include once. .assert/.check non sono asserzioni
+  ma vincoli a bit per le sezioni, e il manuale dice di non usarle. Non
+  esiste un tipo big-endian, ma ci sono soluzioni con bytes()[::-1].
+- Il 4510 e' stato confrontato con la documentazione del C65: tutti i 256
+  opcode e le lunghezze corrispondono alla "4502 Opcode Table" della
+  System Specification. Gli offset dei branch a 16 bit sono corretti
+  (relativi a opcode+2).
+- Nuova cartella test/: 21 test (11 CPU, 6 direttive, 4 casi d'errore),
+  binari, listing e messaggi attesi, controllo indipendente dei byte.
+  Comando: bash test/run_tests.sh
+
+
+1. VERSIONE DEL SORGENTE
+------------------------
+
+1.1 Versioni a confronto
+
+  versione                         origine                         stato
+  64tass 1.60.3243 (release)       64tass-1.60.3243-src.zip, SF    2025-05-10
+  64tass trunk r3301               svn.code.sf.net/p/tass64/code   2026-11-08
+  65tass (questo progetto)         1.60.3243 + aggiunte            NEWS: r3244
+
+  sha256 dello zip ufficiale (in 65tass_ref):
+  9d83be3d23a2c55e085b7c7a7856c2f96080447ea120a6a8c21a217ed76427f0
+  L'ultimo zip pubblicato fra i sorgenti e' ancora 1.60.3243.
+  Il trunk r3301 si legge con HTTP GET su
+  https://svn.code.sf.net/p/tass64/code/trunk/<file> (la revisione si
+  ricava con PROPFIND). Il browser del codice su sourceforge.net risponde
+  403 agli script.
+
+1.2 Che cosa cambia 65tass rispetto a 64tass 1.60.3243
+  (diff completi in /home/claudio/65tass_ref/diff)
+  - 64tass.c (+399 righe):
+    direttive .f88 .f124 .f168 .f248 .f32 (CMD_F88...CMD_F32, formato
+    BYTE_FORMAT_FIXED o _IEEE754 nella struttura dei byte);
+    alias .u8/.s8 .u16/.s16 .u24/.s24 .u32/.s32;
+    in get_command() i nomi delle direttive possono contenere cifre dopo
+    la prima lettera (serve per .u16, .f124...). E' compatibile:
+    cambia qualcosa solo se il nome corrisponde a una direttiva;
+    convertitori da riga di comando -f32tof40, -f64tof40, -f32tof8.8 ...
+    (letti prima di getopt, numero letto con atof).
+  - eval.c (+257): convert_f64_scaled_trunc, convert_f64_to_f32_bits,
+    convert_f64_to_mbf40, suffissi pf88 pf124 pf168 pf248 pf32.
+  - eval.h, arguments.c (solo testo dell'help), NEWS, README.*,
+    syntax/notepadpp-*.xml.
+  - Makefile rinominato makefileLinuxGCC (TARGET = 65tass, .SILENT
+    disattivato). Aggiunti makefileWindowsMingw e makefileWindowsCL.
+    Tolti Makefile.amigaos, Makefile.amigaos4, Makefile.win e amigaos4/.
+    README diventa README.txt.
+
+1.3 Compilazione
+  make -f makefileLinuxGCC -j16      -> ./65tass, 0 errori, 0 avvisi
+  stessa cosa con CFLAGS="-O2 -Wall -Wextra" su una copia: 56 oggetti,
+  0 avvisi. Anche release e trunk originali compilano (in 65tass_ref).
+
+1.4 Trunk r3301: che cosa contiene di nuovo
+  - --color-diag / --no-color-diag (ticket #31, stato "pending") e
+    variabile TERM=dumb.
+  - --output-record-size=<n> per Intel HEX, S-record e MOS.
+  - --mnone e .cpu "none" (nessun opcode).
+  - Bit come maschera: smb #$80,$12 e bbr #$40,$12,dest, oltre a
+    smb 7,$12.
+  - Diagnostica: caret anche sulle definizioni duplicate, avviso sul
+    salto fra banchi di programma, carattere sbagliato invece di
+    "syntax error", correzioni sulle label non definite.
+  - File molto cambiati: opcodes.c (265 righe), error.c (189),
+    instruction.c (183), 64tass.c (93), unicode.c (69), arguments.c (43),
+    mem.c (37), listobj.c (36), console.c (31), argvalues.c (30).
+  - NEWS non e' aggiornato (l'ultima voce e' ancora r3243).
+  Sulla suite il trunk da' gli stessi byte del release in tutti i test
+  delle CPU. Cambia solo il testo di err/include_twice (c'e' il caret in
+  piu').
+
+1.5 Scelta: trunk r3301 (FUSO il 2026-11-18, vedi punto 9)
+  - La suite di test e' stata scritta su 65tass con base 1.60.3243.
+  - Il trunk r3301 e' stato fuso subito dopo, prima della Fase 1, perche'
+    le Fasi 1 e 2 toccano proprio opcodes.c, instruction.c, error.c e
+    console.c; piu' tardi ci sarebbero stati piu' conflitti. In piu' #31
+    si chiude senza lavoro.
+  - Base delle fasi successive: 65tass = trunk r3301 + aggiunte di 65tass.
+
+
+2. TRACKER (sourceforge.net/p/tass64/feature-requests, letto il 2026-11-18)
+--------------------------------------------------------------------------
+
+  #   titolo                                     stato    aperto      risposta / nota
+  15  65816 Bank mirroring request               open     2021-04-17  l'autore propone di risolverlo con gli scope (due istanze dei simboli); nessuna implementazione
+  20  Add cycles output to listing file          open     2023-05-12  l'autore lo giudica "poco pratico" (page crossing, decimale, dimensione dei registri): non arrivera' da 64tass, sara' solo di 65tass
+  24  Include only once                          open     2024-08-15  soluzione dell'autore: nome :?= false / .if !nome / nome := true / ... / .endif (provata: test/src/dir/include_once.asm)
+  28  Big endian datatype                        open     2025-09-04  nessuna risposta; .text x"..." funziona solo con costanti
+  29  o65 output type                            open     2026-02-09  nessuna risposta
+  30  long-branch in .option                     open     2026-03-22  nessuna risposta; esiste l'opzione non documentata auto_longbranch_as_jmp (vedi 3.3)
+  31  Option to always color diagnostics         pending  2026-05-19  FATTO nel trunk: --color-diag e --no-color-diag (ora anche in 65tass)
+
+  Altre richieste aperte che toccano la road map: #27 "Syntax errors
+  create hang" (robustezza, utile per la Fase 4), #22 "Bank operator
+  returns 0 for 6502", #18 etichette per Mesen (Fase 9).
+
+
+3. MANUALE: DIRETTIVE CHE L'HELP NON MOSTRA
+-------------------------------------------
+Fonte: README.txt del progetto (manuale "65tass v1.60 r3244"), prove con
+65tass.
+
+3.1 Include once (Fase 6, #24)
+  - Non esiste. .include include sempre. .binclude include il file in un
+    blocco locale (simboli raggiungibili solo tramite l'etichetta davanti),
+    ma lo include comunque ogni volta.
+  - Senza guardia la seconda inclusione da' "duplicate definition"
+    (test/src/err/include_twice.asm).
+  - La guardia del ticket #24 funziona (test/src/dir/include_once.asm):
+        common_inc :?= false        ; crea la variabile solo la prima volta
+                .if !common_inc
+        common_inc := true
+        ...
+                .endif
+  - Per la Fase 6 resta utile una direttiva vera: va decisa la chiave
+    (percorso assoluto normalizzato del file) e lo scope (il file e' gia'
+    nella lista dei file di file.c).
+
+3.2 .assert e .check (Fase 4)
+  - Manuale: "Do not use these, the syntax will change in next version!".
+  - Non sono asserzioni. Nel sorgente (64tass.c, CMD_ASSERT e CMD_CHECK):
+        .assert <fornisce>, <richiede>, <conflitti>
+            imposta tre maschere di bit della sezione corrente
+        .check <richiesti>, <in conflitto>
+            errore "requirements not met" se un bit richiesto non e'
+            fornito; errore "conflict" se un bit in conflitto e' fornito.
+  - Per i controlli veri nel sorgente esistono .error/.cerror e
+    .warn/.cwarn, con condizione e messaggio composto
+    (.cerror * > $1200, "troppo lungo di ", * - $1200, " byte").
+  - Quindi per la Fase 4 non c'e' un meccanismo di test gia' pronto:
+    servono il runner esterno (fatto, test/) e .cerror per i controlli
+    nel sorgente.
+
+3.3 .option e long branch (#30)
+  - .option allow_branch_across_page = 0/1 (documentata): errore se un
+    branch attraversa la pagina.
+  - .option auto_longbranch_as_jmp = 0/1 (non documentata): con -B, sul
+    65816 usa JMP invece di BRL per i branch lunghi. Sulle CPU senza BRL
+    non cambia niente.
+  - -B si attiva solo da riga di comando: non c'e' un .option per i long
+    branch (e' la richiesta #30).
+  - Comportamenti di -B che la Fase 1 deve conoscere: se la destinazione
+    e' un RTS si usa quell'RTS ("Long branches can return"); un
+    trampolino gia' generato viene riusato dai branch successivi. Sul
+    65CE02/4510/45GS02 si usano i branch a 16 bit e non serve -B.
+
+3.4 Tipi di dato (Fase 10, #28)
+  - Tipi: int (precisione arbitraria), bits, float (double), str, bytes,
+    list, tuple, dict, code, address, symbol, gap (?), bool, none, type.
+  - Direttive di memorizzazione: .byte .char .word .sint .addr .rta .long
+    .lint .dword .dint, .text bytes(v, n) e bits(v, n) per qualsiasi
+    dimensione (n negativo = con segno), .text/.null/.ptext/.shift/
+    .shiftl per le stringhe.
+  - 65tass aggiunge .u8/.s8 ... .u32/.s32, .f88 .f124 .f168 .f248 .f32 e
+    i suffissi pf88 pf124 pf168 pf248 pf32 (test/src/dir/float65tass.asm,
+    valori uguali a quelli di tst/prova.asm).
+  - Big-endian: non esiste un tipo. Funzionano (test/src/dir/bigendian.asm):
+        .byte >lab, <lab
+        .text bytes(lab, 2)[::-1]
+        bw .function v / .endf bytes(v, 2)[::-1]   poi   .text bw(lab)
+    Due trappole: bits(lab,16)[::-1] rovescia i bit (12 34 -> 48 2c);
+    bw() su una lista rovescia tutta la lista (serve un .for).
+  - Il listing e' scritto solo se l'assemblaggio riesce: con un errore non
+    c'e' il .lst (rilevante per la Fase 2).
+
+
+4. DOCUMENTAZIONE C65: CONFRONTO CON IL 4510 DI 65TASS
+------------------------------------------------------
+Fonti in C:\prj\c65doc:
+  manuals\c65_sys-spec.txt           C65 System Specification (Fred Bowen,
+                                     1991): 2.3.7.5 istruzioni con byte e
+                                     cicli, 2.3.7.6 tabella degli opcode
+  manuals\c65faq20.asc.txt           elenco degli opcode nuovi con le
+                                     lunghezze
+  CBM_4510_D390490_ocr.txt / .pdf    datasheet CBM 4510 (disegno 390490)
+  65ce02.txt                         riferimento 65CE02 (zimmers.net)
+  devili_spec\Chapter_2__page38.html mapper del 4510 (MAP/EOM)
+
+4.1 Opcode: 256 su 256 uguali
+  test/src/cpu/4510.asm contiene un'istruzione per ogni opcode, $00-$FF,
+  nell'ordine della tabella 2.3.7.6. Per ognuno ci sono i byte e la
+  lunghezza attesi; 65tass li produce tutti (263 controlli con gli
+  alias). Refusi della documentazione che il test corregge:
+    $F4 / $FC   la tabella scrive "PHD IMM" e "PHD ABS": e' PHW #$nnnn e
+                PHW $nnnn (cosi' in c65faq20, nel 65ce02.txt e in 65tass)
+    $E3 / $C3   INW e DEW sono in base page ($nn), non $nnnn: il 65ce02.txt
+                scrive INW $nnnn e segnala lui stesso il dubbio
+    $EB         ROW ruota a SINISTRA (datasheet 4510: "Rotate memory
+                (word) left"); il 65ce02.txt dice destra. 65tass usa RLW e
+                accetta ROW come alias
+    $5B / $7B   TAB e TBA: in 65tass i nomi principali sono TAD e TDA
+                (registro di base page = D, come la direct page del 65816);
+                TAB e TBA restano alias
+    $62         RTN nella tabella: in 65tass rts #$nn, con alias rtn
+    $80 / $83   BRU nella tabella: in 65tass bra
+    $EA         NOP, che dopo un MAP fa da EOM: 65tass accetta eom
+  Il 65CE02 (--m65ce02) ha la stessa tabella senza MAP ($5C, che sul
+  65CE02 e' AUG, 4 byte): 65tass non accetta $5C sul 65CE02, ed e'
+  corretto per il C65.
+
+4.2 Branch a 16 bit
+  Datasheet 4510 (BSR): l'offset e' "relativo al terzo byte"
+  dell'istruzione, cioe' a opcode+2 e non a opcode+3. 65tass lo fa
+  giusto: bsr $2400 messo a $2400 da' 63 fe ff. Lo stesso vale per i
+  branch condizionati $13, $33 ... $F3 e per BRA $83.
+
+4.3 Differenze di significato da ricordare per le Fasi 1, 5 e 7
+  - STZ ($64 $74 $9C $9E) sul 65CE02/4510 scrive il registro Z, non zero.
+    I byte sono quelli del 65C02, ma il significato cambia: e' un caso
+    per l'analisi statica (Fase 7). Coerente con questo, il manuale
+    toglie l'alias CLR sul 65CE02.
+  - MAP: dopo un MAP gli interrupt restano bloccati finche' non si
+    esegue EOM/NOP (System Specification 2.3.4; datasheet). Avviso
+    possibile in Fase 7: MAP senza EOM.
+  - Mapper: la finestra di 64K e' divisa in 8 blocchi da 8K, in due
+    regioni; ogni blocco si attiva con un bit di maschera, ogni regione
+    ha un suo offset; si arriva a 1 MB;
+    gli 8 bit bassi non sono mai mappati (unita' minima: una pagina). E'
+    la base dell'opzione C65 della Fase 5.
+  - Cicli: la System Specification 2.3.7.5 riporta per ogni istruzione
+    "Bytes Cycles Mode" (per esempio ADC: immediato 2/2, base page 2/3,
+    assoluto 3/4, indiretti 2/5; JSR 20/22/23: 5/7/7 cicli). E' la fonte
+    per la tabella dei cicli 4510 della Fase 1. Il datasheet CBM 4510 ha
+    tabelle simili (OCR da ricontrollare a mano). Penalita' di pagina e
+    cicli dei branch presi del 4510 vanno letti li' e non copiati dal
+    6502.
+
+4.4 Altre CPU
+  - 6502 (151 opcode), 6502i (illegali NMOS), 65C02, R65C02, W65C02,
+    65816, 65DTV02, 45GS02: confrontati con le tabelle "Opcodes" del
+    manuale. Tutto uguale.
+  - 65EL02: confrontato solo con il manuale di 65tass; qui non c'e'
+    documentazione esterna.
+  - 45GS02: le istruzioni con prefisso (42 42 per Q, EA per [zp],z) nel
+    listing sono spezzate su piu' righe, una per prefisso. Il controllo
+    dei test le riunisce. Ne terra' conto il calcolo dei cicli (Fase 1).
+    stq si scrive ($12) senza ,z.
+
+
+5. CARTELLA DEI TEST (test/)
+----------------------------
+  test/run_tests.sh          esegue la suite; --update riscrive gli attesi,
+                             --keep conserva gli output, --asm <file> prova
+                             un altro assemblatore, un argomento filtra
+                             i test (es. cpu/4510)
+  test/tools/check_opcodes.py controlla le annotazioni ;@ <byte> /<lunghezza>
+  test/src/cpu/*.asm         11 CPU (opzione nella riga ";; cpu:")
+  test/src/dir/*.asm         include once, .assert/.check, big-endian,
+                             .option con -B, aggiunte di 65tass
+  test/src/err/*.asm         casi che devono fallire con i messaggi attesi
+  test/expected/<gruppo>/    .bin, .lst (senza le 3 righe di intestazione
+                             con comando e data) e .err
+  test/LEGGIMI.txt           istruzioni
+
+  Risultati del 2026-11-18, prima della fusione del trunk (19 test; dopo
+  la fusione sono 21, vedi punto 9):
+    65tass                    19 passati su 19
+    64tass 1.60.3243          17 su 19 (falliscono solo dir/float65tass e
+                              err/float_overflow: aggiunte di 65tass)
+    64tass trunk r3301        16 su 19 (in piu' err/include_twice: caret
+                              in piu' nel messaggio)
+  Una prova negativa (un'annotazione sbagliata apposta) viene segnalata.
+  Gli output vanno in una cartella temporanea che si cancella alla fine.
+
+
+6. COSE NOTATE IN 65TASS (NON MODIFICATE)
+-----------------------------------------
+  - Nome: --version, l'help ("Usage: 64tass") e l'intestazione del
+    listing ("; 64tass Turbo Assembler Macro V1.60.3243") dicono ancora
+    64tass; il manuale dice "65tass v1.60 r3244" e version.h "1.60.3243".
+    Va deciso se cambiarli: l'intestazione del listing entra nei file
+    attesi solo dalla riga ";Offset" in poi, quindi i test non cambiano.
+  - NEWS r3244 scriveva "pf164" e ".f164" invece di pf168 e .f168
+    (corretto con la fusione del trunk).
+  - tst/debug.txt e' un listing vecchio, con i suffissi p88/pm32 non piu'
+    accettati. tst/prova.asm e' corretto e i suoi valori sono in
+    test/src/dir/float65tass.asm.
+  - Fuori campo negativo (.f124 -2048.5) dice "too large for a 16 bit
+    signed integer": e' il messaggio standard di 64tass, anche per i
+    valori troppo piccoli.
+  - I convertitori -f32tof... leggono il numero con atof: un testo
+    sbagliato diventa 0 senza errore.
+  - Quando un file .sh viene salvato da Windows (\\wsl.localhost) perde
+    il permesso di esecuzione: lanciare la suite con
+    "bash test/run_tests.sh".
+  - Il binario 65tass compilato nella radice non e' in .gitignore
+    (aggiunto: /65tass e /65tass.exe).
+
+
+7. DOVE SI INTERVIENE NELLE FASI SUCCESSIVE
+-------------------------------------------
+  Fase 1 cicli          opcodes.c (struct cpu_s, tabelle opcode e disasm
+                        per CPU), instruction.c (scelta dell'opcode,
+                        long branch in longjump.c), listing.c (colonne)
+  Fase 2 JSON           error.c, errors_e.h, console.c, arguments.c
+                        (nuova opzione)
+  Fase 3 source map     listing.c, file.c (lista dei file e delle righe),
+                        macro.c (espansioni), uscita etichette in
+                        64tass.c/labelobj.c
+  Fase 4 test           test/ (fatto); aggiungere CI
+  Fase 5 memoria        section.c, mem.c, memblocksobj.c (--map)
+  Fase 6 include once   64tass.c (CMD_INCLUDE, intorno alla riga 5294),
+                        file.c
+  Fase 7 analisi        optimizer.c, opt_bit.c (gia' -Woptimize)
+  Fase 10 tipi/formati  64tass.c (direttive dei byte, struttura brec),
+                        arguments.c e mem.c (formati di uscita)
+
+
+8. PROSSIMI PASSI
+-----------------
+  1. FATTO: trunk r3301 fuso in 65tass (punto 9). Resta da committarlo,
+     in un commit separato dalla suite di test.
+  2. Fase 1: tabella dei cicli a partire da 6502.asm e 4510.asm della
+     suite (stessi opcode, stessa chiave). Fonti: tabelle standard per il
+     6502/65C02/65816; System Specification 2.3.7.5 per 65CE02/4510.
+  3. Committare test/ e roadMap/ (adesso sono file non tracciati).
+
+
+9. FUSIONE DEL TRUNK r3301 (2026-11-18)
+---------------------------------------
+Fusione a tre vie: base = 64tass 1.60.3243, "nostro" = 65tass, "loro" =
+trunk r3301. Strumento: git merge-file. Copie di lavoro in
+/home/claudio/65tass_ref/merge.
+
+  - 34 file cambiati solo dal trunk: copiati cosi' come sono. Fra questi:
+    opcodes.c, instruction.c, error.c, console.c, mem.c, longjump.c,
+    version.h ("1.60.3243+"), 64tass.1, examples/ctm7-display.asm,
+    syntax/vim/syntax/64tass.vim. Nei file copiati la riga $Id e' "$Id$"
+    (il trunk via HTTP non espande le parole chiave SVN).
+  - 64tass.c, eval.c, arguments.c: fusi senza conflitti. Controllo: le
+    righe che distinguono 65tass dal trunk sono le stesse che lo
+    distinguevano dal 3243 (64tass.c 417, eval.c 270, arguments.c 12,
+    eval.h 4). Le aggiunte di 65tass sono passate intatte.
+  - Tutti gli altri .c/.h sono uguali al trunk (a parte la riga $Id).
+  - README.txt (7 conflitti) e README.html (2): preso il testo del trunk,
+    con "65tass" negli esempi di riga di comando e l'indentazione a tab
+    di README.txt dove c'era.
+  - Makefile: il Makefile del trunk e' quello di sviluppo dell'autore
+    (CFLAGS con -g e -Werror=..., rigenera README e version.h con
+    svnversion). NON e' stato preso. Nei tre makefile di 65tass e' stata
+    aggiunta solo la nuova dipendenza di functionobj (codeobj.h
+    memblocksobj.h), come in Makefile e Makefile.win del trunk.
+  - Non portati: debian/ (pacchetto Debian di 64tass) e la cartella test/
+    del trunk. Quest'ultima ha 15 sorgenti senza risultati attesi e un
+    Makefile con percorsi dell'autore: non e' una suite.
+  - NEWS: aggiunta la voce di questa fusione, corretti pf164/.f164.
+
+  Verifiche dopo la fusione:
+    compilazione -O2 e -O2 -Wall -Wextra: 0 errori, 0 avvisi
+    65tass             21 passati su 21 (aggiornato solo l'atteso di
+                       err/include_twice: caret in piu'; aggiunti
+                       dir/bitmask_r3301 e err/bitmask_single)
+    64tass trunk r3301 19 su 21: falliscono solo i 2 test delle aggiunte
+                       di 65tass, quindi 65tass = trunk + aggiunte
+    64tass 1.60.3243   16 su 21
+    provati a mano: smb #$80 / bbr #$40, --mnone, --output-record-size=8
+    con --intel-hex, --color-diag (codici ANSI presenti).
+  Nota: il trunk scrive "a single bit must be be set" (refuso dell'autore,
+  lasciato com'e').
+
+
+10. BUG CORRETTO: OPERATORI SUI VALORI BYTES (2026-11-18)
+---------------------------------------------------------
+  Trovato controllando le macro di cd65_ASMLib (libCD.asm,
+  load_op1_imm32) con un valore pf32.
+  - bytesobj.c, calc1(): per < > ` <> >` >< il terzo byte era spostato di
+    8 bit invece di 16. Effetto: >x"563412" dava $36 (byte1|byte2) invece
+    di $34, e `x"563412" dava 0 invece di $12.
+  - pf32 restituisce un valore bytes, quindi #>1.24pf32 dava $BE invece di
+    $1E: load_op1_imm32 1.24pf32 caricava un float sbagliato.
+  - Il bug c'e' anche in 64tass 1.60.3243 e nel trunk r3301: da segnalare
+    a SourceForge (bugs), non ancora fatto.
+  - Correzione: << 16 (una riga). Test: test/src/dir/bytes_operators.asm.
+    Suite: 22 passati su 22.
+
+  Altre note sulle librerie di cd65 (non modificate):
+  - float32 di libF32 e' MBF a 4 byte (esponente + 3 byte di mantissa),
+    non IEEE-754: va bene con .byte o .dword x pf32, non con .f32.
+  - float40.to_f32 arrotonda al pari, pf32 tronca: per 1.24 danno
+    81 1e b8 52 e 81 1e b8 51.
+  - op2 (rhs, $62-$65) coincide con la mantissa di FAC1: load_op2_* e
+    fstack_load_*_mem distruggono FAC1.
+  - libFSTACK: i 32 bit sono LE in op1 e BE sullo stack; un F32 packed
+    passato con fstack_push_op1 si legge giusto solo con load_param_op1.

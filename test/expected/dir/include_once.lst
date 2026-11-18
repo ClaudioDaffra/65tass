@@ -1,0 +1,24 @@
+;Offset	;Hex		;Monitor	;Source
+
+;******  Processing input file: src/dir/include_once.asm
+
+
+;******  Processing file: src/dir/inc/common.inc
+
+=true					common_inc := true
+=1					K_ONE   = 1
+.1000	60		rts		helper  rts
+
+;******  Return to file: src/dir/include_once.asm
+
+
+;******  Processing file: src/dir/inc/common.inc
+
+
+;******  Return to file: src/dir/include_once.asm
+
+.1001	a9 01		lda #$01	        lda #K_ONE              ;@ a9 01 /2
+.1003	20 00 10	jsr $1000	        jsr helper              ;@ 20 00 10 /3
+.1006	60		rts		        rts                     ;@ 60 /1
+
+;******  End of listing

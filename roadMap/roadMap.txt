@@ -1,0 +1,418 @@
+ANALISI DI 64TASS: FUNZIONALITA' E POSSIBILI MIGLIORAMENTI
+=========================================================
+
+Oggetto: analisi delle funzionalita' di 64tass e proposte di sviluppo.
+
+INTRODUZIONE
+------------
+64tass e' un macro assemblatore multipass per processori della famiglia 65xx,
+utilizzato anche per lo sviluppo su Commodore 64. E' gia' un assemblatore
+molto completo. Gli interventi piu' utili riguardano quindi soprattutto il
+debugging, l'analisi delle prestazioni, la diagnostica e l'integrazione con
+strumenti moderni.
+
+Nota: le funzionalita' di seguito sono proposte da valutare. Alcune sono
+richieste presenti nel sistema di tracciamento del progetto; altre sono
+idee progettuali. Non tutte sono necessariamente assenti in ogni versione
+futura di 64tass. La valutazione richiede una verifica della versione del
+codice sorgente su cui si vuole lavorare.
+
+1. FUNZIONALITA' GIA' PRESENTI
+------------------------------
+- Supporto per diversi processori 65xx, inclusi 6502, 65C02, 65816 e 45GS02.
+- Macro, funzioni definite dall'utente e assemblaggio condizionale.
+- Strutture, union e scope.
+- Sezioni e gestione integrata degli indirizzi.
+- Gestione e trasformazione dei branch lunghi.
+- Inclusione di file sorgenti e binari.
+- Diversi formati di output (tra cui PRG, binario, XEX e Intel HEX).
+- Esportazione di etichette/simboli per strumenti come VICE.
+- Listing con indirizzi e byte generati.
+- Generazione di informazioni sulle dipendenze per sistemi di build.
+
+Un debugger grafico completo o un'interfaccia grafica integrata non sono
+componenti nativi descritti come parte principale dell'assemblatore.
+
+2. DODICI POSSIBILI MIGLIORAMENTI
+--------------------------------
+1) Calcolo dei cicli CPU (priorita' molto alta)
+   Visualizzare i cicli di ogni istruzione, distinguere i casi minimi e
+   massimi, tenere conto di branch e attraversamenti di pagina e stimare
+   il tempo delle routine, particolarmente utile per raster e demo C64.
+
+2) Source map per debugger (priorita' molto alta)
+   Creare una corrispondenza affidabile tra indirizzi macchina, file
+   sorgenti e righe, anche in presenza di macro e file inclusi.
+
+3) Analizzatore della memoria C64 (priorita' molto alta)
+   Segnalare potenziali conflitti tra codice, dati, memoria riservata,
+   stack, zero page, ROM, I/O e configurazioni di banking.
+
+4) Test assembly automatici (priorita' molto alta)
+   Un test runner per confrontare binari attesi, verificare dimensioni,
+   collocazioni e risultati di macro e direttive.
+
+5) Diagnostica in formato JSON (priorita' alta)
+   Produrre errori e avvisi strutturati per VS Code, altri editor e CI.
+
+6) Report di ottimizzazione (priorita' alta)
+   Evidenziare possibili riduzioni di byte e cicli CPU, mantenendo
+   distinta l'analisi dai cambiamenti automatici del codice.
+
+7) Build incrementale (priorita' alta)
+   Evitare ricompilazioni inutili dei componenti invariati quando il
+   modello di assemblaggio e le dipendenze lo consentono.
+
+8) Direttiva include once (priorita' alta)
+   Consentire di includere un sorgente una sola volta, facendo attenzione
+   ai percorsi, agli scope e alla compatibilita' con il codice esistente.
+
+9) Output oggetto rilocabile (priorita' media)
+   Aggiungere o ampliare il supporto per formati come o65 e per linker
+   esterni, con corretta gestione delle rilocazioni.
+
+10) Analisi statica 6502 (priorita' media)
+    Generare avvisi su possibili bug, uso sospetto di indirizzi o
+    istruzioni e problemi dipendenti dal processore scelto.
+
+11) Supporto LSP (priorita' media)
+    Fornire navigazione dei simboli, autocompletamento, riferimenti e
+    diagnostica nell'editor tramite un Language Server Protocol.
+
+12) Profilazione guidata da emulatore (priorita' media)
+    Integrare i dati di esecuzione di un emulatore per conoscere il tempo
+    realmente impiegato dalle routine e le istruzioni piu' eseguite.
+
+3. APPROFONDIMENTI
+------------------
+
+A) CONTEGGIO DEI CICLI CPU
+
+Esempio di sorgente 6502:
+
+    * = $1000
+            ldx #$00
+    loop inx
+            cpx #$10
+            bne loop
+            rts
+
+Un listing arricchito potrebbe mostrare:
+
+    $1000 A2 00 LDX #$00 2 cicli
+    $1002 E8 INX 2 cicli
+    $1003 E0 10 CPX #$10 2 cicli
+    $1005 D0 FB BNE loop 2 o 3 cicli (piu' eventuale penalita')
+
+Il calcolo dovrebbe distinguere il comportamento dei diversi modelli di
+CPU e le penalita' dovute al page crossing. Per i loop, i totali
+richiedono ipotesi esplicite sul numero di iterazioni.
+
+B) DEBUG CON VICE
+
+64tass esporta gia' etichette con l'opzione --vice-labels. Un'integrazione
+piu' completa potrebbe permettere di impostare breakpoint sui simboli,
+mostrare registri, seguire il sorgente passo passo e ricaricare i binari
+in VICE dopo la compilazione. Una buona architettura terrebbe il debugger
+come strumento esterno collegato all'assemblatore.
+
+C) CONTROLLO DELLA MEMORIA DEL C64
+
+Schema molto semplificato dell'indirizzamento C64:
+
+    $0000-$00FF Zero page
+    $0100-$01FF Stack
+    $0200-$9FFF RAM / aree utilizzate dal sistema
+    $A000-$BFFF BASIC ROM o RAM sottostante
+    $C000-$CFFF RAM
+    $D000-$DFFF I/O, ROM caratteri o RAM sottostante
+    $E000-$FFFF KERNAL ROM o RAM sottostante
+
+La memoria visibile varia secondo la configurazione dei banchi. Un nuovo
+controllo C64 dovrebbe quindi distinguere indirizzo logico, destinazione
+fisica e impostazioni di banking invece di considerare tutte le aree
+sempre disponibili allo stesso modo.
+
+D) TEST AUTOMATICI
+
+Le possibilita' gia' esistenti per generare errori durante l'assemblaggio
+non sostituiscono un sistema di test completo. Sarebbe utile verificare
+automaticamente i byte prodotti, confrontare gli output con file noti e
+eseguire i test in CI su piu' piattaforme.
+
+4. RICHIESTE DI FUNZIONALITA' DA VERIFICARE NEL TRACKER
+-------------------------------------------------------
+Tra le richieste pubblicate nel tracker SourceForge del progetto figurano:
+
+- #20: aggiunta dei cicli CPU al listing.
+- #24: direttiva include once.
+- #28: tipo di dato big-endian.
+- #29: supporto all'output o65.
+- #30: controllo dei long branch nel sorgente.
+- #31: colori persistenti per i messaggi diagnostici.
+- #15: mirroring dei banchi di memoria 65816.
+
+Gli stati delle richieste possono cambiare: controllare il tracker prima
+di iniziare un'implementazione.
+
+5. CONFRONTO TRA UTILITA' E COMPLESSITA'
+----------------------------------------
+Stime qualitative (scala 1-5, maggiore = piu' alto):
+
+Funzionalita' Utilita' Complessita'
+----------------------------------------------------
+Calcolo cicli CPU 5 3
+Diagnostica JSON 5 2
+Include once 4 2
+Source map 5 4
+Analisi memoria 4 4
+Output o65 3 5
+
+Queste valutazioni sono orientative, non misure ufficiali.
+
+6. AREE DEL CODICE DA ESAMINARE
+-------------------------------
+- Parser e direttive: per nuove direttive e opzioni nel sorgente.
+- Codifica delle istruzioni e modelli CPU: per i cicli di clock.
+- Generazione output e listing: per JSON, o65 e tempi CPU.
+- Gestione simboli, scope e indirizzi: per le source map.
+- Gestione errori e avvisi: per l'analisi statica.
+
+Questa e' una suddivisione concettuale. I nomi esatti dei file sorgenti
+coinvolti vanno verificati nel repository della versione selezionata.
+
+7. ORDINE DI IMPLEMENTAZIONE SUGGERITO
+--------------------------------------
+Prima modifica a grande impatto: conteggio dei cicli CPU.
+Prima modifica a complessita' relativamente contenuta: diagnostica JSON.
+Poi: source map, integrazione VICE, controlli specifici della memoria C64.
+
+Un approccio prudente e': definire il comportamento atteso; aggiungere
+casi di test; implementare la funzione senza cambiare il risultato dei
+sorgenti esistenti; verificare la compatibilita' sulle CPU supportate;
+documentare sintassi, limiti e opzioni.
+
+8. RIFERIMENTI
+-------------
+Manuale e sito ufficiale 64tass:
+https://tass64.sourceforge.net/
+
+Sorgenti 64tass su SourceForge:
+https://sourceforge.net/p/tass64/code/HEAD/tree/
+
+Richieste di nuove funzionalita':
+https://sourceforge.net/p/tass64/feature-requests/
+
+Richiesta sui cicli CPU:
+https://sourceforge.net/p/tass64/feature-requests/20/
+
+Documentazione Turbo Assembler / Turbo Macro Pro:
+https://turbo.style64.org/docs/table-of-contents
+
+CONCLUSIONE
+-----------
+64tass dispone gia' di un linguaggio di assemblaggio avanzato. Per
+migliorarlo in modo concreto, conviene investire soprattutto negli
+strumenti di analisi, nel debugging e nell'integrazione con l'ecosistema
+di sviluppo. Il calcolo dei cicli CPU e' particolarmente prezioso per
+chi programma il Commodore 64; una diagnostica JSON e' invece un buon
+primo intervento per modernizzare i flussi di lavoro.
+
+-------------------------------------------------------------------------------------
+
+documentazione ufficiale : 
+
+-------------------------------------------------------------------------------------
+
+Documentazione ufficiale CPU 4510
+
+Internet Archive - Commodore IC LSI Microprocessor 4510 Drawing 390490
+
+https://archive.org/details/commodoreiclsimicroprocessor4510d390490
+
+Specifiche tecniche complete del Commodore 65
+
+Indice principale della System Specification:
+
+https://www.devili.iki.fi/Computers/Commodore/C65/System_Specification/
+
+Sezione CPU 4510 e mapper:
+
+https://www.devili.iki.fi/Computers/Commodore/C65/System_Specification/Chapter_2/page38.html
+
+Modalità di indirizzamento e dettagli base page / zero page:
+
+https://www.devili.iki.fi/Computers/Commodore/C65/System_Specification/Chapter_2/page60.html
+
+Memory Map del C65
+
+https://philreichert.org/commodore-c65/system-memory-map.html
+
+Zero Page del C65
+
+Discussione tecnica:
+
+https://www.forum64.de/index.php?thread/106639-zero-page-memory-map-for-the-c65/
+
+Memory Mapping 4510 / MEGA65
+
+Ottima spiegazione moderna del MAP:
+
+https://mega65.atlassian.net/wiki/spaces/MEGA65/pages/33259521/Memory+Mapping
+
+Opcode 4510 / 65CE02
+
+Una delle migliori reference:
+
+http://www.zimmers.net/anonftp/pub/cbm/documents/chipdata/65ce02.txt
+
+ROM Commodore 65
+
+Repository storico:
+
+https://github.com/MiSTer-devel/C64_MiSTer/tree/master/releases/c65
+
+Materiale generale C65
+
+https://www.c65gs.org/
+
+https://c65gs.blogspot.com/
+
+https://en.wikipedia.org/wiki/Commodore_65
+
+Se ti serve l'oro vero
+
+Cerca e scarica questi PDF:
+
+Plain Text
+390490_4510_Microprocessor.pdf
+C65_System_Specification.pdf
+65CE02.txt
+VIC-III_4567_Programming_Reference.pdf
+DMAgic_Controller.pdf
+
+-----------------------------------------------
+
+ROADMAP 65tass
+
+-----------------------------------------------
+
+Road map 64tass (V1.60.3243): cosa fare, in ordine
+
+Il materiale di partenza è la tua analisi, aggiornata con quello che l’help mostra già presente. Le voci segnate “da verificare” richiedono il manuale o il sorgente.
+
+Punto di partenza (già presente)
+CPU: 6502, 65C02, R65C02, W65C02, 65CE02, 65EL02, 65DTV02, 65816, 4510, 45GS02.
+Macro, funzioni, strutture, scope, sezioni, assemblaggio condizionale, include di sorgenti e binari.
+Long branch automatici (-B) e avviso -Wlong-branch.
+Output PRG, flat, nonlinear, XEX, Intel HEX, MOS HEX, S-record, Apple II, C256 PGX/PGZ, Cody, WDC.
+Etichette: normali, VICE (anche numeriche), ctags, dump; mappa dell’output (--map); listing con byte e numeri di riga; dipendenze per make (-M).
+
+Diagnostica: molti -W (-Wall, -Wunused*, -Wshadow, -Wbranch-page, -Woptimize, -Wimmediate, -Wno-pitfalls e altri), -Werror.
+
+Fase 0 – Preparazione
+
+Scegliere la versione del sorgente (V1.60.3243 o l’ultima su SourceForge) e farla compilare.
+Controllare nel tracker lo stato di #15, #20, #24, #28, #29, #30, #31.
+Leggere nel manuale le direttive che l’help non mostra (include once, assert/check, tipi di dato).
+Preparare la cartella di test: sorgenti piccoli per ogni CPU, con binari e listing attesi.
+
+STATO (2026-11-18): FATTA. Rapporto completo in roadMap/fase0_rapporto.txt.
+- Versione: 65tass era 64tass 1.60.3243 + aggiunte di 65tass (.f88...,
+  pf*, .u8...). Il 2026-11-18 e' stato fuso il trunk SVN r3301 di 64tass
+  (2026-11-08, non rilasciato): ora 65tass = trunk r3301 + aggiunte,
+  versione "1.60.3243+". Compila senza avvisi.
+- Tracker: #31 fatto nel trunk, quindi ora anche in 65tass (--color-diag,
+  --no-color-diag); #15 #20 #24 #28 #29 #30
+  aperti; per #20 l'autore non pensa di farlo; per #24 c'e' una guardia
+  nel sorgente che funziona.
+- Manuale: niente include once; .assert/.check sono vincoli a bit delle
+  sezioni (da non usare), non asserzioni: per i controlli ci sono
+  .cerror/.cwarn; niente big-endian, ma bytes(v, 2)[::-1] funziona;
+  .option auto_longbranch_as_jmp esiste ma non e' documentata.
+- C65: i 256 opcode del 4510 corrispondono alla tabella della C65 System
+  Specification (2.3.7.6); i branch a 16 bit sono relativi a opcode+2.
+- Test: cartella test/ con 21 test (11 CPU, direttive, errori), tutti
+  verdi. Comando: bash test/run_tests.sh (vedi test/LEGGIMI.txt).
+
+Fase 1 – Cicli CPU nel listing (priorità altissima, #20)
+
+Tabella dei cicli per ogni modello di CPU, compreso il 4510.
+Nel listing: cicli minimi e massimi per istruzione; branch (2 o 3 cicli) e page crossing segnalati.
+Opzione dedicata, spenta di default, così i listing esistenti non cambiano.
+I totali delle routine e dei loop solo con ipotesi esplicite sul numero di iterazioni.
+Prove: sorgente d’esempio del loop ldx/inx/cpx/bne, confronto con tabelle note.
+(Fase 0: il loop e un branch che attraversa la pagina sono gia' in
+test/src/cpu/6502.asm; i cicli del 4510 sono nella System Specification
+2.3.7.5; le istruzioni 45GS02 con prefisso occupano piu' righe del listing.)
+
+Fase 2 – Diagnostica JSON (priorità alta, complessità bassa)
+
+Nuova opzione per errori e avvisi in formato strutturato: 
+file, riga, colonna, gravità, nome della diagnostica, messaggio.
+Compatibile con VS Code e CI; l’output testuale resta com’è.
+Prove: sorgenti con errori noti e JSON atteso.
+
+Fase 3 – Source map reale (priorità altissima)
+
+File che collega indirizzo, file sorgente e riga, anche dentro macro e file inclusi.
+Partire da quello che esiste: --ctags-labels e --line-numbers.
+Formato leggibile da debugger e strumenti esterni (e da VICE tramite le etichette).
+Prove: macro annidate e include su più livelli.
+
+Fase 4 – Test automatici dell’assemblaggio (priorità altissima)
+
+Test runner esterno: assembla, confronta byte, dimensioni e collocazioni con file attesi.
+Prima verificare che cosa offrono già le direttive di controllo (verificato
+in Fase 0: .assert/.check non servono; si usano .cerror/.cwarn. Il runner
+di base c'e' gia': test/run_tests.sh. Restano CI e controlli di dimensione
+e collocazione).
+Esecuzione in CI su più piattaforme.
+
+Fase 5 – Controllo della memoria C64 (priorità altissima)
+
+Segnalare conflitti fra codice, dati, zero page, stack, ROM e I/O.
+Distinguere indirizzo logico, destinazione fisica e banking (come nello schema del C64).
+Partire da --map e dalle sezioni già presenti.
+Opzione a parte per il C65 (4510): mappa con il MAP.
+
+Fase 6 – Include once (priorità alta, #24)
+
+Controllare prima nel manuale se esiste già un equivalente (verificato in
+Fase 0: non esiste; c'e' solo la guardia :?= / .if del ticket #24, provata in
+test/src/dir/include_once.asm).
+Quindi: direttiva che include un file una sola volta, attenta a percorsi relativi, scope e compatibilità.
+
+Fase 7 – Report di ottimizzazione e analisi statica (priorità alta e media)
+
+Estendere -Woptimize e -Wimmediate con un report di byte e cicli risparmiabili; l’analisi non cambia mai il codice da sola.
+Nuovi avvisi di analisi statica: registro usato senza valore, indirizzi sospetti, problemi legati al modello di CPU.
+Prove: casi buoni e cattivi per ogni nuovo avviso.
+
+Fase 8 – Build incrementale (priorità alta)
+
+Basata sul file delle dipendenze (-M): ricompilare solo ciò che cambia, quando il modello di assemblaggio lo consente.
+Fuori dall’assemblatore, per esempio in un wrapper o nel makefile, se il sorgente non lo permette.
+
+Fase 9 – Integrazione con VICE ed editor (priorità media)
+
+Debug con VICE: breakpoint sui simboli, registri, avanzamento sul sorgente e ricarica dopo la compilazione. Strumento esterno collegato tramite etichette e source map.
+Profilazione guidata da emulatore: leggere i dati di esecuzione e metterli in relazione con le righe.
+LSP: navigazione dei simboli, autocompletamento, riferimenti e diagnostica, basato sulla diagnostica JSON della Fase 2.
+
+Fase 10 – Formati e tipi (priorità media)
+
+Output o65 e rilocazioni (#29): complesso, da fare solo se serve un linker esterno.
+Tipo di dato big-endian (#28), mirroring dei banchi 65816 (#15), colori persistenti per i messaggi (#31): da verificare e valutare caso per caso.
+(Fase 0: #31 e' arrivato con la fusione del trunk r3301; per #28 ci
+sono soluzioni con bytes()[::-1] in test/src/dir/bigendian.asm; #15 e' aperto
+e l'autore suggerisce gli scope.)
+Metodo per ogni fase
+Definire il comportamento atteso e la sintassi.
+Scrivere i casi di test.
+Implementare senza cambiare il risultato dei sorgenti esistenti (nuove opzioni spente di default).
+Verificare su tutte le CPU supportate.
+Documentare sintassi, limiti e opzioni.
+Ordine riassuntivo
+
+Fase 0 → 1 (cicli) → 2 (JSON) → 3 (source map) → 4 (test) → 5 (memoria) → 6 (include once) → 7 → 8 → 9 → 10.
