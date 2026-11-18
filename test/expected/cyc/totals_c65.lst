@@ -1,0 +1,14 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/totals_c65.asm
+
+.2000    [ 2     ]  a2 00                    ldx #$00                  ldx #$00                ;@ a2 00 /2 ~2
+.2002    [ 4     ]  bd 00 10                 lda $1000,x       loop    lda $1000,x             ;@ bd 00 10 /3 ~4
+.2005    [ 5     ]  92 fb                    sta ($fb),z               sta ($fb),z             ;@ 92 fb /2 ~5
+.2007    [ 1     ]  e8                       inx                       inx                     ;@ e8 /1 ~1
+.2008    [ 2     ]  d0 f8                    bne $2002                 bne loop                ;@ d0 f8 /2 ~2
+;******  Cycles: 1200 (100 iterations)
+.200a    [ 2     ]  42                       neg a                     neg a                   ;@ 42 /1 ~2
+;******  Cycles: 4 (2 iterations)
+
+;******  End of listing

@@ -1,0 +1,26 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/totals_6502.asm
+
+.1000    [ 2     ]  a2 00                    ldx #$00                  ldx #$00                ;@ a2 00 /2 ~2
+.1002    [ 2     ]  e8                       inx               loop    inx                     ;@ e8 /1 ~2
+.1003    [ 2     ]  e0 10                    cpx #$10                  cpx #$10                ;@ e0 10 /2 ~2
+.1005    [ 2/3   ]  d0 fb                    bne $1002                 bne loop                ;@ d0 fb /2 ~2/3
+;******  Cycles: 111 (16 iterations, loop branch taken 15 times)
+.1007    [ 2     ]  a0 04                    ldy #$04          outer   ldy #4                  ;@ a0 04 /2 ~2
+.1009    [ 2     ]  88                       dey               inner   dey                     ;@ 88 /1 ~2
+.100a    [ 2/3   ]  d0 fd                    bne $1009                 bne inner               ;@ d0 fd /2 ~2/3
+;******  Cycles: 19 (4 iterations, loop branch taken 3 times)
+.100c    [ 2     ]  ca                       dex                       dex                     ;@ ca /1 ~2
+.100d    [ 2/3   ]  d0 f8                    bne $1007                 bne outer               ;@ d0 f8 /2 ~2/3
+;******  Cycles: 207 (8 iterations, loop branch taken 7 times)
+.100f    [ 4-5   ]  bd 34 12                 lda $1234,x               lda $1234,x             ;@ bd 34 12 /3 ~4-5
+.1012    [ 2/3   ]  f0 01                    beq $1015                 beq +                   ;@ f0 01 /2 ~2/3
+.1014    [ 2     ]  ea                       nop                       nop                     ;@ ea /1 ~2
+.1015    [ 6     ]  60                       rts               +       rts                     ;@ 60 /1 ~6
+;******  Cycles: 14-16 (1 iteration)
+.10f8    [ 2     ]  ca                       dex               wait    dex                     ;@ ca /1 ~2
+.1100    [ 2/4p  ]  d0 f6                    bne $10f8                 bne wait                ;@ d0 f6 /2 ~2/4p
+;******  Cycles: 16 (3 iterations, loop branch taken 2 times)
+
+;******  End of listing

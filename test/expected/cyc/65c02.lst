@@ -1,0 +1,42 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/65c02.asm
+
+
+;******  Processing file: src/cyc/../cpu/65c02.asm
+
+.1000    [ 5     ]  04 12                    tsb $12                   tsb $12                 ;@ 04 12 /2
+.1002    [ 6     ]  0c 34 12                 tsb $1234                 tsb $1234               ;@ 0c 34 12 /3
+.1005    [ 5     ]  12 12                    ora ($12)                 ora ($12)               ;@ 12 12 /2
+.1007    [ 5     ]  14 12                    trb $12                   trb $12                 ;@ 14 12 /2
+.1009    [ 2     ]  1a                       inc a                     inc a                   ;@ 1a /1
+.100a    [ 6     ]  1c 34 12                 trb $1234                 trb $1234               ;@ 1c 34 12 /3
+.100d    [ 5     ]  32 12                    and ($12)                 and ($12)               ;@ 32 12 /2
+.100f    [ 4     ]  34 12                    bit $12,x                 bit $12,x               ;@ 34 12 /2
+.1011    [ 2     ]  3a                       dec a                     dec a                   ;@ 3a /1
+.1012    [ 4-5   ]  3c 34 12                 bit $1234,x               bit $1234,x             ;@ 3c 34 12 /3
+.1015    [ 5     ]  52 12                    eor ($12)                 eor ($12)               ;@ 52 12 /2
+.1017    [ 3     ]  5a                       phy                       phy                     ;@ 5a /1
+.1018    [ 3     ]  64 12                    stz $12                   stz $12                 ;@ 64 12 /2   scrive zero
+.101a    [ 5-6   ]  72 12                    adc ($12)                 adc ($12)               ;@ 72 12 /2
+.101c    [ 4     ]  74 12                    stz $12,x                 stz $12,x               ;@ 74 12 /2
+.101e    [ 4     ]  7a                       ply                       ply                     ;@ 7a /1
+.101f    [ 6     ]  7c 34 12                 jmp ($1234,x)             jmp ($1234,x)           ;@ 7c 34 12 /3
+.1022    [ 3     ]  80 fe                    bra $1022                 bra *                   ;@ 80 fe /2
+.1024    [ 2     ]  89 12                    bit #$12                  bit #$12                ;@ 89 12 /2
+.1026    [ 5     ]  92 12                    sta ($12)                 sta ($12)               ;@ 92 12 /2
+.1028    [ 4     ]  9c 34 12                 stz $1234                 stz $1234               ;@ 9c 34 12 /3
+.102b    [ 5     ]  9e 34 12                 stz $1234,x               stz $1234,x             ;@ 9e 34 12 /3
+.102e    [ 5     ]  b2 12                    lda ($12)                 lda ($12)               ;@ b2 12 /2
+.1030    [ 5     ]  d2 12                    cmp ($12)                 cmp ($12)               ;@ d2 12 /2
+.1032    [ 3     ]  da                       phx                       phx                     ;@ da /1
+.1033    [ 5-6   ]  f2 12                    sbc ($12)                 sbc ($12)               ;@ f2 12 /2
+.1035    [ 4     ]  fa                       plx                       plx                     ;@ fa /1
+.1036    [ 2     ]  1a                       inc a                     ina                     ;@ 1a /1
+.1037    [ 2     ]  3a                       dec a                     dea                     ;@ 3a /1
+.1038    [ 3     ]  64 12                    stz $12                   clr $12                 ;@ 64 12 /2
+
+;******  Return to file: src/cyc/65c02.asm
+
+
+;******  End of listing

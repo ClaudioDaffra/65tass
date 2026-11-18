@@ -1,0 +1,8 @@
+# C64 DTV (65DTV02): come l'NMOS piu' BRA, SAC, SIR. I tre valori nuovi NON
+# hanno una fonte nella cartella c65doc: da confermare con la documentazione
+# del DTV.
+12 3        # bra (stessa pagina)
+32 2        # sac #
+42 2        # sir #
+a9 2        # lda #
+07 5        # slo $zp

@@ -1,0 +1,7 @@
+# 65EL02: gli opcode comuni con il 65C02 usano i tempi del 65C02, quelli
+# propri del 65EL02 non hanno una fonte e mostrano "?".
+a9 2        # lda #
+1a 2        # inc a
+02 ?        # nxt
+0f ?        # mul $zp
+eb ?        # xba

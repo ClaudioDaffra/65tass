@@ -1,11 +1,11 @@
-;Offset	;Hex		;Monitor	;Source
+;Offset  ;Hex                     ;Monitor          ;Source
 
 ;******  Processing input file: src/dir/longbranch_option.asm
 
-.1000	f0 03		beq $1005	        bne far                 ;@ f0 03 82 fb 0f /5   beq *+5 / brl far
-.1002	82 fb 0f	brl $2000
-.1005	4c 00 20	jmp $2000	        bra far                 ;@ 4c 00 20 /3   jmp
-.1008	82 f5 0f	brl $2000	        bra far                 ;@ 82 /3         brl
-.2000	ea		nop		far     nop                     ;@ ea /1
+.1000    f0 03                    beq $1005                 bne far                 ;@ f0 03 82 fb 0f /5   beq *+5 / brl far
+.1002    82 fb 0f                 brl $2000
+.1005    4c 00 20                 jmp $2000                 bra far                 ;@ 4c 00 20 /3   jmp
+.1008    82 f5 0f                 brl $2000                 bra far                 ;@ 82 /3         brl
+.2000    ea                       nop               far     nop                     ;@ ea /1
 
 ;******  End of listing

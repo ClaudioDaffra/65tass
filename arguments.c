@@ -50,7 +50,9 @@ static const struct arguments_s arguments_default = {
         true,    /* source */
         false,   /* linenum */
         false,   /* verbose */
-        false    /* append */
+        false,   /* append */
+        false,   /* cycles (65tass) */
+        false    /* classic (65tass) */
     },
     {            /* make */
         {0,0,0}, /* name_pos */
@@ -372,7 +374,8 @@ enum {
     NO_MAP, MAP_APPEND, LIST_APPEND, SIMPLE_LABELS, LABELS_SECTION,
     MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND, C256_PGX, C256_PGZ,
     OUTPUT_EXEC, M45GS02, CTAGS_LABELS, CODY_BIN, WDC_BIN, OUTPUT_RECORD_SIZE,
-    COLOR_DIAG, AUTO_COLOR_DIAG, NO_COLOR_DIAG, MNONE
+    COLOR_DIAG, AUTO_COLOR_DIAG, NO_COLOR_DIAG, MNONE, LIST_CYCLES, NO_LIST_CYCLES,
+    LIST_CLASSIC, NO_LIST_CLASSIC
 };
 
 static const struct my_option long_options[] = {
@@ -454,6 +457,10 @@ static const struct my_option long_options[] = {
     {"source"           , my_no_argument      , NULL,  SOURCE},
     {"no-line-numbers"  , my_no_argument      , NULL,  NO_LINE_NUMBERS},
     {"line-numbers"     , my_no_argument      , NULL,  LINE_NUMBERS},
+    {"list-cycles"      , my_no_argument      , NULL,  LIST_CYCLES},
+    {"no-list-cycles"   , my_no_argument      , NULL,  NO_LIST_CYCLES},
+    {"list-classic"     , my_no_argument      , NULL,  LIST_CLASSIC},
+    {"no-list-classic"  , my_no_argument      , NULL,  NO_LIST_CLASSIC},
     {"no-caret-diag"    , my_no_argument      , NULL,  NO_CARET_DIAG},
     {"macro-caret-diag" , my_no_argument      , NULL,  MACRO_CARET_DIAG},
     {"caret-diag"       , my_no_argument      , NULL,  CARET_DIAG},
@@ -747,6 +754,10 @@ int init_arguments(int *argc2, char **argv2[]) {
             case SOURCE: arguments.list.source = true;break;
             case LINE_NUMBERS: arguments.list.linenum = true;break;
             case NO_LINE_NUMBERS: arguments.list.linenum = false;break;
+            case LIST_CYCLES: arguments.list.cycles = true;break;
+            case NO_LIST_CYCLES: arguments.list.cycles = false;break;
+            case LIST_CLASSIC: arguments.list.classic = true;break;
+            case NO_LIST_CLASSIC: arguments.list.classic = false;break;
             case 'C': arguments.caseinsensitive = 0;break;
             case NO_CASE_SENSITIVE: arguments.caseinsensitive = 0x20;break;
             case VERBOSE_LIST: arguments.list.verbose = true;break;
@@ -756,7 +767,7 @@ int init_arguments(int *argc2, char **argv2[]) {
             case TAB_SIZE: get_arg(&get_args, &arguments.tab_size_pos); break;
             case USAGE:puts(
              /* 12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
-               "Usage: 64tass [-abBCfnTqwWcitxmse?V] [-D <label>=<value>] [-o <file>]\n"
+               "Usage: 65tass [-abBCfnTqwWcitxmse?V] [-D <label>=<value>] [-o <file>]\n"
                "        [-E <file>] [-I <path>] [-l <file>] [-L <file>] [-M <file>] [--ascii]\n"
                "        [--nostart] [--long-branch] [--case-sensitive] [--cbm-prg] [--flat]\n"
                "        [--atari-xex] [--apple-ii] [--intel-hex] [--mos-hex] [--s-record]\n"
@@ -769,7 +780,8 @@ int init_arguments(int *argc2, char **argv2[]) {
                "        [--vice-labels-numeric] [--vice-labels] [--dump-labels]\n"
                "        [--simple-labels] [--mesen-labels] [--ctags-labels] [--list=<file>]\n"
                "        [--list-append=<file>] [--no-monitor] [--no-source] [--line-numbers]\n"
-               "        [--tab-size=<value>] [--verbose-list] [-W<option>]\n"
+               "        [--list-cycles] [--list-classic] [--tab-size=<value>]\n"
+               "        [--verbose-list] [-W<option>]\n"
                "        [--dependencies=<file>] [--dependencies-append=<file>] [--make-phony]\n"
                "        [--output=<file>] [--output-append=<file>] [--output-exec=<expr>]\n"
                "        [--output-record-size=<value>] [--no-output] [--map=<file>]\n"
@@ -779,12 +791,12 @@ int init_arguments(int *argc2, char **argv2[]) {
                "        [--usage] [--version] SOURCES\n");
                    return 0;
 
-            case 'V':puts("64tass Turbo Assembler Macro V" VERSION);
+            case 'V':puts("65tass Turbo Assembler Macro V" VERSION);
                      return 0;
             case HELP:
             case '?':if (my_optopt == '?' || opt == HELP) { puts(
-               "Usage: 64tass [OPTIONS...] SOURCES\n"
-               "64tass Turbo Assembler Macro V" VERSION "\n"
+               "Usage: 65tass [OPTIONS...] SOURCES\n"
+               "65tass Turbo Assembler Macro V" VERSION "\n"
                "\n"
                "  -a, --ascii            Source is not in PETASCII\n"
                "  -B, --long-branch      Automatic bxx *+5 jmp $xxxx\n"
@@ -904,6 +916,8 @@ int init_arguments(int *argc2, char **argv2[]) {
                "  -m, --no-monitor       Don't put monitor code into listing\n"
                "  -s, --no-source        Don't put source code into listing\n"
                "      --line-numbers     Put line numbers into listing\n"
+               "      --list-cycles      Put CPU cycles into listing\n"
+               "      --list-classic     64tass listing layout (tabs)\n"
                "      --tab-size=<n>     Override the default tab size (8)\n"
                "      --verbose-list     List unused lines as well\n"
                "\n"
@@ -933,7 +947,7 @@ int init_arguments(int *argc2, char **argv2[]) {
                 FALL_THROUGH; /* fall through */
             default:
             exit:
-                fputs("Try '64tass --help' or '64tass --usage' for more information.\n", stderr);
+                fputs("Try '65tass --help' or '65tass --usage' for more information.\n", stderr);
                 return -1;
             }
         }
@@ -1015,8 +1029,8 @@ int init_arguments(int *argc2, char **argv2[]) {
         }
     }
     if (argc <= my_optind) {
-        fputs("Usage: 64tass [OPTIONS...] SOURCES\n"
-              "Try '64tass --help' or '64tass --usage' for more information.\n", stderr);
+        fputs("Usage: 65tass [OPTIONS...] SOURCES\n"
+              "Try '65tass --help' or '65tass --usage' for more information.\n", stderr);
         return -1;
     }
     return my_optind;

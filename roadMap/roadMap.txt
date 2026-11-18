@@ -346,6 +346,23 @@ Prove: sorgente d’esempio del loop ldx/inx/cpx/bne, confronto con tabelle note
 test/src/cpu/6502.asm; i cicli del 4510 sono nella System Specification
 2.3.7.5; le istruzioni 45GS02 con prefisso occupano piu' righe del listing.)
 
+STATO (2026-11-18): FATTA. Rapporto in roadMap/fase1_rapporto.txt.
+- Totali: .cycles <iterazioni> ... .endcycles scrive nel listing il totale
+  del blocco; il loop branch finale conta preso iterazioni-1 volte.
+  "nome .endcycles" da' nome = (minimo, massimo) per .cerror nel sorgente.
+- Listing: nuovo formato a spazi e colonne fisse (cicli dopo l'indirizzo,
+  tra parentesi); --list-classic per il formato di 64tass con tabulazioni.
+- Opzione --list-cycles (spenta di default): colonna ;Cycles nel listing.
+- Tutte le CPU: NMOS con illegali, 65DTV02, 65C02/R65C02/W65C02, 65816 (m,
+  x, D), 65CE02/4510 (C65), 45GS02 ("?" per le istruzioni con prefisso),
+  65EL02 ("?" per gli opcode propri).
+- Branch: non preso/preso, "p" se il branch preso cambia pagina.
+- Verifica: NMOS contro la tabella di cd65 (256 opcode), 4510 contro le
+  regole della C65 System Specification (256 opcode), altre CPU contro i
+  data sheet; suite 38 test verdi.
+- Da fare: tempi MEGA65 per i prefissi 45GS02; conferma dei tre opcode del
+  DTV.
+
 Fase 2 – Diagnostica JSON (priorità alta, complessità bassa)
 
 Nuova opzione per errori e avvisi in formato strutturato: 

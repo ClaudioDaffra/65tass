@@ -727,7 +727,7 @@ static void labelctags(Namespace *names, FILE *flab, bool append) {
         fputs("!_TAG_FILE_FORMAT\t1\t/original ctags format/\n"
               "!_TAG_FILE_SORTED\t0\t/0=unsorted, 1=sorted, 2=foldcase/\n"
               "!_TAG_PROGRAM_AUTHOR\tZsolt Kajtar\t/soci" "\x40" "c64.rulez.org/\n"
-              "!_TAG_PROGRAM_NAME\t64tass\t/64tass Turbo Assembler Macro/\n"
+              "!_TAG_PROGRAM_NAME\t65tass\t/65tass Turbo Assembler Macro/\n"
               "!_TAG_PROGRAM_URL\thttps://tass64.sourceforge.net\t/official site/\n"
               "!_TAG_PROGRAM_VERSION\t" VERSION "\t//\n", flab);
     }

@@ -1,12 +1,12 @@
-;Offset	;Hex		;Monitor	;Source
+;Offset  ;Hex                     ;Monitor          ;Source
 
 ;******  Processing input file: src/cpu/w65c02.asm
 
-.1000	cb		wai		        wai                     ;@ cb /1
-.1001	db		stp		        stp                     ;@ db /1
-.1002	db		stp		        hlt                     ;@ db /1   alias di STP
-.1003	f7 12		smb 7,$12	        smb 7,$12               ;@ f7 12 /2
-.1005	ff 12 fd	bbs 7,$12,$1005	        bbs 7,$12,*             ;@ ff 12 fd /3
-.1008	80 fe		bra $1008	        bra *                   ;@ 80 fe /2
+.1000    cb                       wai                       wai                     ;@ cb /1
+.1001    db                       stp                       stp                     ;@ db /1
+.1002    db                       stp                       hlt                     ;@ db /1   alias di STP
+.1003    f7 12                    smb 7,$12                 smb 7,$12               ;@ f7 12 /2
+.1005    ff 12 fd                 bbs 7,$12,$1005           bbs 7,$12,*             ;@ ff 12 fd /3
+.1008    80 fe                    bra $1008                 bra *                   ;@ 80 fe /2
 
 ;******  End of listing

@@ -458,6 +458,17 @@ the list file.
 This option creates a new column for showing line numbers for easier
 identification of source origin.
 .TP 0.5i
+\fB\-\-list\-cycles\fR
+(65tass) Adds a column with the CPU cycles of each instruction: a fixed
+value, a minimum\-maximum range, not taken/taken for branches (with p when
+the taken branch crosses a page), +  for 45GS02 prefixes and ? when no
+timing is documented. Off by default. The column follows the address.
+.TP 0.5i
+\fB\-\-list\-classic\fR
+(65tass) Use the 64tass listing layout with tabs. The default 65tass layout
+uses only spaces and fixed columns: offset, cycles, hex bytes, monitor,
+source.
+.TP 0.5i
 \fB\-\-tab\-size\fR=\fInumber\fR
 By default the listing file is using a tab size of 8 to align the
 disassembly. This can be changed to other more favorable values like 4.

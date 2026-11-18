@@ -3234,6 +3234,45 @@ Printer control
 .hidemac
 .showmac
     Ignored for compatibility.
+.cycles [<iterations>]
+.endcycles
+    65tass only. Writes the total CPU cycles of the instructions between the
+    two directives into the listing, as a line ";******  Cycles: ..." after
+    the block. The number of iterations is the explicit hypothesis of the
+    total (default 1). The listing must be enabled (-L); --list-cycles adds
+    the per instruction column but is not needed for the totals.
+
+    Every instruction of the block counts <iterations> times. If the last
+    instruction is a branch whose target is inside the block (the loop
+    branch) it counts taken <iterations>-1 times and not taken once. Other
+    branches count not taken for the minimum and taken for the maximum, and
+    page crossing indexes count for the maximum, so the total can be a
+    minimum-maximum range. A block inside another block counts as one
+    instruction of the outer block. If an instruction has no documented
+    timing the total is "unknown". Up to 16 blocks can be nested.
+
+            ldx #$00
+            .cycles 16
+    loop    inx
+            cpx #$10
+            bne loop
+            .endcycles      ;Cycles: 111 (16 iterations, loop branch taken 15 times)
+
+    The result is 16*(2+2) for INX and CPX, 15*3 for the taken BNE and 2
+    for the last, not taken one.
+
+    With a label in front of .endcycles the total can be used in the
+    source: the label becomes a constant tuple (minimum, maximum). It is
+    computed in every pass, so it can be used before the block too, and it
+    does not need the listing. If an instruction has no documented timing
+    the label is none (using it is an error).
+
+            .cerror irq_t[1] > 63, "IRQ too slow: ", irq_t[1], " cycles"
+            .cycles
+    irq     lda $d019
+            sta $d019
+            jmp $ea31
+    irq_t   .endcycles      ;irq_t = (11, 11)
 -------------------------------------------------------------------------------
 
 Pseudo instructions
@@ -4762,11 +4801,69 @@ Assembly listing
 
     ;******  End of listing
 
+--list-cycles
+    65tass only. Adds a column with the CPU cycles of each instruction, off
+    by default. The column comes right after the address, in brackets
+    ([ 4-5   ]); with --list-classic it follows the monitor column instead.
+
+    The text in the column:
+
+    4       fixed number of cycles
+    4-5     minimum-maximum: an index may cross a page, decimal mode on the
+            65C02, 65816 native or emulation mode
+    2/3     branch: not taken / taken
+    2/4p    branch whose taken target is on another page (p); the assembler
+            knows the target so this is exact
+    4p      always taken branch (BRA) that crosses a page
+    7*n     65816 MVN/MVP: 7 cycles for each byte moved
+    -       the instruction halts the CPU (NMOS JAM)
+    +       45GS02 prefix byte, counted with the following instruction
+    ?       no documented timing for this CPU and opcode
+
+    Timing per CPU:
+
+    --m65xx, --m6502 (NMOS 6502/6510/8500/8502/7501/8501, with illegal
+    opcodes): reads with an index +1 on page crossing, branches +1 taken and
+    +1 more on page crossing. --m65dtv02: as NMOS, plus BRA, SAC and SIR.
+    --m65c02, --mr65c02, --mw65c02: WDC/Rockwell timing; ADC/SBC take one
+    more cycle in decimal mode, ASL/LSR/ROL/ROR abs,x take 6 cycles plus one
+    on page crossing, BBR/BBS 5/6 plus one on page crossing.
+    --m65816: the column follows .as/.al, .xs/.xl and the low byte of .dpage;
+    native/emulation mode is not known, so BRK, COP, RTI and the page
+    crossing of branches show a range.
+    --m65ce02, --m4510 (Commodore 65): timing of the Commodore 65 System
+    Specification 2.3.7.5; there are no page crossing penalties and a branch
+    takes the same time taken or not (byte relative 2, word relative 3).
+    --m45gs02: 4510 timing for the 4510 instructions; the prefixed Q register
+    and [zp],z instructions show "?".
+    --m65el02: 65C02 timing for the shared opcodes, "?" for the others.
+
+    Totals of routines or loops depend on the number of iterations and on
+    the branches taken: they are computed only inside .cycles/.endcycles
+    blocks, with the number of iterations given explicitly.
+
+    ;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+    .1000    [ 2     ]  a2 00                    ldx #$00                  ldx #$00
+    .1002    [ 2     ]  e8                       inx               loop    inx
+    .1003    [ 2     ]  e0 10                    cpx #$10                  cpx #$10
+    .1005    [ 2/3   ]  d0 fb                    bne $1002                 bne loop
+    .1007    [ 4-5   ]  bd 34 12                 lda $1234,x               lda $1234,x
+
+--list-classic
+    65tass only. The 65tass listing uses only spaces and fixed columns (9
+    characters for the address, 11 for the cycles, 25 for the hex bytes, so 8
+    data bytes fit, and 18 for the monitor), so it looks the same in every
+    editor whatever its tab setting. A text that is too long for its column
+    is followed by one space instead of a line break. This option gives back
+    the 64tass layout with tabs instead, the same as the listing of
+    64tass apart from the program name in the first line.
+
 --tab-size=<number>
-    By default the listing file is using a tab size of 8 to align the
-    disassembly. This can be changed to other more favorable values like 4.
-    Only spaces are used if 1 is selected. Please note that this has no effect
-    on the source code on the right hand side.
+    With --list-classic the listing file is using a tab size of 8 to align
+    the disassembly. This can be changed to other more favorable values like
+    4. Only spaces are used if 1 is selected. Please note that this has no
+    effect on the source code on the right hand side. The 65tass layout
+    always uses spaces.
 --verbose-list
     Normally the assembler tries to minimize listing output by omitting
     "unimportant" lines. But sometimes it's better to just list everything
@@ -5825,9 +5922,9 @@ Assembler directives
 
 .addr .al .align .alignblk .alignind .alignpageind .as .assert .autsiz .bend
 .binary .binclude .bfor .block .break .breakif .brept .bwhile .byte .case .cdef
-.cerror .char .check .comment .continue .continueif .cpu .cwarn .databank
+.cerror .char .check .comment .continue .continueif .cpu .cwarn .cycles .databank
 .default .dint .dpage .dsection .dstruct .dunion .dword .edef .elif .else
-.elsif .enc .encode .end .endblock .endc .endalignblk .endcomment .endencode
+.elsif .enc .encode .end .endblock .endc .endalignblk .endcomment .endcycles .endencode
 .endf .endfor .endfunction .endif .endlogical .endm .endmacro .endn
 .endnamespace .endp .endpage .endproc .endrept .ends .endsection .endsegment
 .endstruct .endswitch .endu .endunion .endv .endvirtual .endweak .endwhile

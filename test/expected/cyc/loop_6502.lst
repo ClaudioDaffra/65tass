@@ -1,0 +1,21 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/loop_6502.asm
+
+.1000    [ 2     ]  a2 00                    ldx #$00                  ldx #$00                ;@ a2 00 /2 ~2
+.1002    [ 2     ]  e8                       inx               loop    inx                     ;@ e8 /1 ~2
+.1003    [ 2     ]  e0 10                    cpx #$10                  cpx #$10                ;@ e0 10 /2 ~2
+.1005    [ 2/3   ]  d0 fb                    bne $1002                 bne loop                ;@ d0 fb /2 ~2/3
+.1007    [ 4-5   ]  bd 34 12                 lda $1234,x               lda $1234,x             ;@ bd 34 12 /3 ~4-5
+.100a    [ 5     ]  9d 34 12                 sta $1234,x               sta $1234,x             ;@ 9d 34 12 /3 ~5
+.100d    [ 5-6   ]  b1 12                    lda ($12),y               lda ($12),y             ;@ b1 12 /2 ~5-6
+.100f    [ 5     ]  6c 34 12                 jmp ($1234)               jmp ($1234)             ;@ 6c 34 12 /3 ~5
+.1012    [ 6     ]  20 34 12                 jsr $1234                 jsr $1234               ;@ 20 34 12 /3 ~6
+.1015    [ 6     ]  60                       rts                       rts                     ;@ 60 /1 ~6
+.10f0    [ 2     ]  ea                       nop               back    nop                     ;@ ea /1 ~2
+.10fd    [ 2/3   ]  d0 f1                    bne $10f0                 bne back                ;@ d0 f1 /2 ~2/3
+.20fd    [ 2/4p  ]  d0 11                    bne $2110                 bne $2110               ;@ d0 11 /2 ~2/4p
+.20f0    [ 2     ]  ea                       nop                       nop                     ;@ ea /1 ~2
+.2100    [ 2/4p  ]  f0 ee                    beq $20f0                 beq $20f0               ;@ f0 ee /2 ~2/4p
+
+;******  End of listing

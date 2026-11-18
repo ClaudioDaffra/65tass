@@ -108,6 +108,44 @@ The command-line conversion helpers `-f32tof40`/`-f64tof40` and
 `-f64...` forms) print fixed-point or MBF/F40 representations for a supplied
 number.
 
+## Listing layout
+
+The 65tass listing uses only spaces and fixed columns, so it looks the same in
+every editor: offset, cycles (with `--list-cycles`), hex bytes (8 data bytes
+fit), monitor, source. `--list-classic` gives back the 64tass layout with tabs.
+
+    ;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+    .1000    [ 2     ]  a2 00                    ldx #$00                  ldx #$00
+    .1002    [ 2     ]  e8                       inx               loop    inx
+    .1005    [ 2/3   ]  d0 fb                    bne $1002                 bne loop
+    >0836               43 49 41 4f 20 44 41 4c                            .text "CIAO DAL 6502",13
+
+## CPU cycles in the listing
+
+`--list-cycles` adds a `;Cycles` column to the listing (off by default). It
+covers all supported CPUs: NMOS 6502 with illegal opcodes (C64, VIC-20, C128,
+Plus/4, C16), 65DTV02, 65C02/R65C02/W65C02, 65816 (following `.as/.al`,
+`.xs/.xl` and `.dpage`), 65CE02 and 4510 (Commodore 65, from the C65 System
+Specification). Branches show `not taken/taken`, with `p` when the taken
+branch crosses a page; `?` marks opcodes without documented timing (45GS02
+prefixed instructions, 65EL02 extensions).
+
+    65tass --m4510 --list-cycles -L list.txt a.asm
+
+`.cycles [<iterations>]` ... `.endcycles` writes the total of a block into the
+listing. The iteration count is the explicit hypothesis: the loop branch at
+the end of the block counts taken `iterations-1` times and not taken once.
+
+            .cycles 16
+    loop    inx
+            cpx #$10
+            bne loop
+            .endcycles      ; listing: ;******  Cycles: 111 (16 iterations, ...)
+
+With a label (`name .endcycles`) the total is a constant tuple
+`(minimum, maximum)` that the source can check, for example
+`.cerror name[1] > 63, "too slow"`.
+
 ## Tests
 
 `test/` holds a regression suite: one source per CPU (all 256 opcodes for the

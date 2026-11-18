@@ -1,5 +1,5 @@
-65TASS - SUITE DI TEST (Fase 0 della road map)
-==============================================
+65TASS - SUITE DI TEST (Fasi 0 e 1 della road map)
+==================================================
 
 Prova che 65tass produca sempre gli stessi byte, listing e messaggi, e
 che la codifica di ogni istruzione corrisponda a una fonte indipendente
@@ -27,10 +27,32 @@ CARTELLE
               .u8...), operatori < > ` sui valori bytes (bug corretto).
               inc/ contiene i file inclusi.
   src/err/    casi che devono fallire, con i messaggi attesi.
+  src/cyc/    Fase 1, colonna dei cicli (--list-cycles): un file per CPU che
+              include il sorgente di cpu/, piu' loop_6502, branch_65c02,
+              modes_65816 e c65_45gs02 con i cicli attesi scritti a mano, e
+              totals_6502, totals_c65, totals_45gs02 per .cycles/.endcycles
+              e totals_source per i totali usati nel sorgente (nome
+              .endcycles); err/cycles_budget e' il .cerror che scatta.
+  src/lst/    formato classico di 64tass (--list-classic): stessi corpi di
+              cpu/6502, cpu/4510, cpu/45gs02, cyc/loop_6502, dir/float65tass;
+              gli attesi sono i listing di prima del formato a spazi, quindi
+              il formato classico resta identico a quello di 64tass.
+  ref/        fonti indipendenti per i cicli:
+                nmos_cycles_cd65.txt  tutti i 256 opcode NMOS, estratti dalla
+                                      tabella di cd65 (illegali verificati
+                                      da cd65 con SingleStepTests)
+                cycles_<cpu>[_m16_x16|_dl].txt  opcode e testo atteso, dai
+                                      data sheet WDC/Rockwell
+              Il 4510 si controlla con regole per gruppi scritte dalla C65
+              System Specification 2.3.7.5 (tools/check_cycles.py).
   expected/   gli attesi: <nome>.bin (binario senza indirizzo iniziale),
               <nome>.lst (listing dalla riga ";Offset" in poi: le righe
               prima contengono comando e data) e <nome>.err (messaggi).
   tools/check_opcodes.py   controlla le annotazioni ;@ contro il listing.
+  tools/cycles_dump.c      stampa la tabella dei cicli di una CPU.
+  tools/check_cycles.py    confronta quella tabella con test/ref e con le
+                           regole della C65 System Specification; la suite
+                           lo esegue come test "cicli/riferimenti".
 
 INTESTAZIONE DI UN SORGENTE (righe facoltative)
   ;; cpu: --m4510         CPU (predefinita --m65xx)
@@ -45,6 +67,12 @@ ANNOTAZIONI ;@
   spezzate su piu' righe nel listing: lo script le riunisce.
   Le annotazioni vengono dalle fonti, non dall'assemblatore: se un byte
   cambia, il test fallisce anche dopo un --update.
+  Con --list-cycles si puo' aggiungere il testo atteso della colonna dei
+  cicli:   bne loop    ;@ d0 fb /2 ~2/3
+  (per le istruzioni con prefisso si controlla l'ultima riga).
+  Sulla riga .endcycles si puo' scrivere il totale atteso del blocco:
+          .endcycles    ;=cycles 111 (16 iterations, loop branch taken 15 times)
+  I totali si confrontano in ordine con le righe ";******  Cycles:".
 
 AGGIUNGERE UN TEST
   1. scrivere src/<gruppo>/<nome>.asm (con ;@ dove serve);
@@ -59,4 +87,10 @@ NOTE
     err/float_overflow (provano le aggiunte di 65tass). Con 64tass
     1.60.3243 falliscono anche i test che usano le novita' del trunk
     (dir/bitmask_r3301, err/bitmask_single, err/include_twice).
-  - Rapporto completo: roadMap/fase0_rapporto.txt.
+  - Il 64tass originale non conosce --list-cycles e --list-classic: con
+    --asm i test di cyc/ e lst/ falliscono, "cicli/riferimenti" non viene
+    eseguito e i listing non si confrontano (solo binari e messaggi),
+    perche' 64tass ha il formato classico.
+  - tools/check_opcodes.py legge le colonne dalla riga ";Offset ...":
+    funziona con tutti e due i formati.
+  - Rapporti: roadMap/fase0_rapporto.txt, roadMap/fase1_rapporto.txt.

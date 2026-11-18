@@ -1,0 +1,3 @@
+src/err/cycles_budget.asm:11:9: error: loop troppo lento: 111 cicli
+         .cerror loop_t[1] > 100, "loop troppo lento: ", loop_t[1], " cicli"
+         ^

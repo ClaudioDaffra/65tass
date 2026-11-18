@@ -1,20 +1,20 @@
-;Offset	;Hex		;Monitor	;Source
+;Offset  ;Hex                     ;Monitor          ;Source
 
 ;******  Processing input file: src/dir/bytes_operators.asm
 
-=z'9g]?'				b3      = x"563412"                     ; bytes little-endian = $123456
->1000	56 34 12			        .byte <b3, >b3, `b3             ;@ 56 34 12 /3
->1003	56 34 12			        .byte <$123456, >$123456, `$123456      ;@ 56 34 12 /3
->1006	56 34				        .word <>b3                      ;@ 56 34 /2
->1008	34 12				        .word >`b3                      ;@ 34 12 /2
->100a	34 56				        .word ><b3                      ;@ 34 56 /2
->100c	a9 cb ed			        .byte <~b3, >~b3, `~b3          ;@ a9 cb ed /3
-=z'FGzr#'				v       = 1.24pf32
->100f	81 1e b8 51			        .byte <v, >v, `v, v >> 24       ;@ 81 1e b8 51 /4
->1013	81 1e b8 51			        .dword v                        ;@ 81 1e b8 51 /4
-.1017	a9 51		lda #$51	        lda #>(v >> 16)                 ;@ a9 51 /2
-.1019	a9 81		lda #$81	        lda #<v                         ;@ a9 81 /2
-.101b	a0 1e		ldy #$1e	        ldy #>v                         ;@ a0 1e /2
-.101d	a2 b8		ldx #$b8	        ldx #<(v >> 16)                 ;@ a2 b8 /2
+=z'9g]?'                                            b3      = x"563412"                     ; bytes little-endian = $123456
+>1000    56 34 12                                           .byte <b3, >b3, `b3             ;@ 56 34 12 /3
+>1003    56 34 12                                           .byte <$123456, >$123456, `$123456      ;@ 56 34 12 /3
+>1006    56 34                                              .word <>b3                      ;@ 56 34 /2
+>1008    34 12                                              .word >`b3                      ;@ 34 12 /2
+>100a    34 56                                              .word ><b3                      ;@ 34 56 /2
+>100c    a9 cb ed                                           .byte <~b3, >~b3, `~b3          ;@ a9 cb ed /3
+=z'FGzr#'                                           v       = 1.24pf32
+>100f    81 1e b8 51                                        .byte <v, >v, `v, v >> 24       ;@ 81 1e b8 51 /4
+>1013    81 1e b8 51                                        .dword v                        ;@ 81 1e b8 51 /4
+.1017    a9 51                    lda #$51                  lda #>(v >> 16)                 ;@ a9 51 /2
+.1019    a9 81                    lda #$81                  lda #<v                         ;@ a9 81 /2
+.101b    a0 1e                    ldy #$1e                  ldy #>v                         ;@ a0 1e /2
+.101d    a2 b8                    ldx #$b8                  ldx #<(v >> 16)                 ;@ a2 b8 /2
 
 ;******  End of listing

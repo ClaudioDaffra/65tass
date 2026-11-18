@@ -1,0 +1,16 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/branch_65c02.asm
+
+.1000    [ 3     ]  80 fe                    bra $1000                 bra *                   ;@ 80 fe /2 ~3
+.1002    [ 5/6   ]  0f 12 fd                 bbr 0,$12,$1002           bbr 0,$12,*             ;@ 0f 12 fd /3 ~5/6
+.1005    [ 2-3   ]  69 01                    adc #$01                  adc #1                  ;@ 69 01 /2 ~2-3
+.1007    [ 4-6   ]  f9 34 12                 sbc $1234,y               sbc $1234,y             ;@ f9 34 12 /3 ~4-6
+.100a    [ 6-7   ]  1e 34 12                 asl $1234,x               asl $1234,x             ;@ 1e 34 12 /3 ~6-7
+.100d    [ 7     ]  fe 34 12                 inc $1234,x               inc $1234,x             ;@ fe 34 12 /3 ~7
+.1010    [ 6     ]  6c 34 12                 jmp ($1234)               jmp ($1234)             ;@ 6c 34 12 /3 ~6
+.10fd    [ 4p    ]  80 21                    bra $1120                 bra $1120               ;@ 80 21 /2 ~4p
+.11fc    [ 5/7p  ]  9f 12 21                 bbs 1,$12,$1220           bbs 1,$12,$1220         ;@ 9f 12 21 /3 ~5/7p
+.12fe    [ 3     ]  80 20                    bra $1320                 bra $1320               ;@ 80 20 /2 ~3   da $1300: stessa pagina
+
+;******  End of listing

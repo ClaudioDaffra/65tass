@@ -1,9 +1,10 @@
 65TASS - FASE 0 (PREPARAZIONE): RAPPORTO DI ANALISI
 ===================================================
 
-Data: 2026-11-18. Progetto: /home/claudio/65tass (git, origin
-github.com/claudiodaffra/65tass, commit b0fac31 + file nuovi non ancora
-committati). Riferimenti scaricati: /home/claudio/65tass_ref (fuori dal
+Data: 2026-11-18. Progetto: /home/claudio/65tass (partito dal commit
+b0fac31 di github.com/claudiodaffra/65tass; dal 2026-11-18 la copia in WSL
+non ha piu' .git: gli aggiornamenti su GitHub li fa l'autore a mano).
+Riferimenti scaricati: /home/claudio/65tass_ref (fuori dal
 progetto). Documentazione C65: C:\prj\c65doc.
 
 SINTESI
@@ -289,8 +290,10 @@ Fonti in C:\prj\c65doc:
 
 6. COSE NOTATE IN 65TASS (NON MODIFICATE)
 -----------------------------------------
-  - Nome: --version, l'help ("Usage: 64tass") e l'intestazione del
-    listing ("; 64tass Turbo Assembler Macro V1.60.3243") dicono ancora
+  - Nome (RISOLTO il 2026-11-18: ora il programma dice 65tass in
+    --version, --usage, --help, errori, listing, mappa e ctags):
+    --version, l'help ("Usage: 64tass") e l'intestazione del
+    listing ("; 64tass Turbo Assembler Macro V1.60.3243") dicevano ancora
     64tass; il manuale dice "65tass v1.60 r3244" e version.h "1.60.3243".
     Va deciso se cambiarli: l'intestazione del listing entra nei file
     attesi solo dalla riga ";Offset" in poi, quindi i test non cambiano.
@@ -332,18 +335,19 @@ Fonti in C:\prj\c65doc:
 
 8. PROSSIMI PASSI
 -----------------
-  1. FATTO: trunk r3301 fuso in 65tass (punto 9). Resta da committarlo,
-     in un commit separato dalla suite di test.
+  1. FATTO: trunk r3301 fuso in 65tass (punto 9).
   2. Fase 1: tabella dei cicli a partire da 6502.asm e 4510.asm della
      suite (stessi opcode, stessa chiave). Fonti: tabelle standard per il
      6502/65C02/65816; System Specification 2.3.7.5 per 65CE02/4510.
-  3. Committare test/ e roadMap/ (adesso sono file non tracciati).
+  3. Portare su GitHub (a mano, a cura dell'autore) il codice fuso,
+     test/ e roadMap/.
 
 
 9. FUSIONE DEL TRUNK r3301 (2026-11-18)
 ---------------------------------------
 Fusione a tre vie: base = 64tass 1.60.3243, "nostro" = 65tass, "loro" =
-trunk r3301. Strumento: git merge-file. Copie di lavoro in
+trunk r3301. Strumento: git merge-file (usato solo come programma di
+fusione dei file, senza repository). Copie di lavoro in
 /home/claudio/65tass_ref/merge.
 
   - 34 file cambiati solo dal trunk: copiati cosi' come sono. Fra questi:

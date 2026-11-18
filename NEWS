@@ -1,4 +1,30 @@
 
+65tass 2026-11-18 (road map phase 1)
+====================================
+
+new	--list-cycles: CPU cycle column in the listing (off by default),
+	feature request #20. Tables in cycles.c for NMOS 6502 (+illegal),
+	65DTV02, 65C02/R65C02/W65C02, 65816 (m, x, D low byte), 65CE02/4510
+	(Commodore 65 System Specification), 45GS02 (4510 timing, "?" for
+	prefixed instructions), 65EL02 (65C02 timing, "?" for extensions).
+	Branches: not taken/taken, "p" when the taken target is on another
+	page.
+add	test/src/cyc, test/ref, tools/cycles_dump.c, tools/check_cycles.py:
+	cycles checked against cd65's NMOS table and the C65 specification
+new	.cycles [<iterations>] / .endcycles: total cycles of a block in the
+	listing. The loop branch at the end of the block counts taken
+	iterations-1 times and not taken once; other branches give a
+	minimum-maximum range. Blocks can be nested (16 levels).
+	"name .endcycles" defines name = (minimum, maximum) in every pass, so
+	the source can check it (.cerror name[1] > 63, ...).
+new	listing layout with spaces only and fixed columns (offset, cycles in
+	brackets, hex 25 wide, monitor 18, source); too long fields get one
+	space instead of a line break. --list-classic gives the 64tass layout
+	with tabs (only the program name in the first line differs).
+change	the program calls itself 65tass everywhere: --version, --usage,
+	--help, "Try '65tass --help'", error messages, listing, memory map and
+	ctags headers.
+
 65tass 2026-11-18
 =================
 

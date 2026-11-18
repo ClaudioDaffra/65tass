@@ -3803,6 +3803,41 @@ reset   <b>cld</b>
 <dt><b>.hidemac</b><a name="d_hidemac" href="#d_hidemac"></a>
 <dt><b>.showmac</b><a name="d_showmac" href="#d_showmac"></a>
 <dd>Ignored for compatibility.</dd>
+<dt><b>.cycles</b> [&lt;iterations&gt;]<a name="d_cycles" href="#d_cycles"></a>
+<dt><b>.endcycles</b><a name="d_endcycles" href="#d_endcycles"></a>
+<dd><p>65tass only. Writes the total CPU cycles of the instructions between the
+two directives into the listing, as a line <code>;******  Cycles: ...</code>
+after the block. The number of iterations is the explicit hypothesis of the
+total (default 1). The listing must be enabled (<code>-L</code>);
+<code>--list-cycles</code> is not needed for the totals.</p>
+<p>Every instruction of the block counts &lt;iterations&gt; times. If the last
+instruction is a branch whose target is inside the block (the loop branch) it
+counts taken &lt;iterations&gt;-1 times and not taken once. Other branches
+count not taken for the minimum and taken for the maximum, so the total can be
+a range. An inner block counts as one instruction of the outer block. If an
+instruction has no documented timing the total is <q>unknown</q>. Up to 16
+blocks can be nested.</p>
+<pre>
+        ldx #$00
+        .cycles 16
+loop    inx
+        cpx #$10
+        bne loop
+        .endcycles      ;Cycles: 111 (16 iterations, loop branch taken 15 times)
+</pre>
+<p>With a label in front of <code>.endcycles</code> the total can be used in
+the source: the label becomes a constant tuple (minimum, maximum). It is
+computed in every pass, so it can be used before the block too, and it does
+not need the listing. If an instruction has no documented timing the label is
+none (using it is an error).</p>
+<pre>
+        .cerror irq_t[1] &gt; 63, "IRQ too slow: ", irq_t[1], " cycles"
+        .cycles
+irq     lda $d019
+        sta $d019
+        jmp $ea31
+irq_t   .endcycles      ;irq_t = (11, 11)
+</pre></dd>
 </dl>
 
 <hr>
@@ -5503,10 +5538,62 @@ separated file number in case it comes from a different file then the previous l
 ;******  End of listing
 </pre></dd>
 
+<dt><b>--list-cycles</b><a name="o_list-cycles" href="#o_list-cycles"></a>
+
+<dd>65tass only. Adds a column with the CPU cycles of each instruction, off
+by default. The column comes right after the address, in brackets
+(<code>[ 4-5   ]</code>); with <code>--list-classic</code> it follows the
+monitor column instead.
+
+<pre>
+4       fixed number of cycles
+4-5     minimum-maximum: an index may cross a page, decimal mode on the
+        65C02, 65816 native or emulation mode
+2/3     branch: not taken / taken
+2/4p    branch whose taken target is on another page (p); exact
+4p      always taken branch (BRA) that crosses a page
+7*n     65816 MVN/MVP: 7 cycles for each byte moved
+-       the instruction halts the CPU (NMOS JAM)
++       45GS02 prefix byte, counted with the following instruction
+?       no documented timing for this CPU and opcode
+</pre>
+
+<p>NMOS 6502 (also with illegal opcodes) and 65DTV02: reads with an index
+take one more cycle on page crossing, branches one more when taken and one
+more on page crossing. 65C02, R65C02, W65C02: WDC/Rockwell timing, ADC/SBC
+one more cycle in decimal mode. 65816: the column follows .as/.al, .xs/.xl
+and the low byte of .dpage; native/emulation mode is not known, so BRK, COP,
+RTI and branch page crossing show a range. 65CE02 and 4510 (Commodore 65):
+timing of the Commodore 65 System Specification 2.3.7.5, no page crossing
+penalties, branches take the same time taken or not. 45GS02: 4510 timing,
+prefixed instructions show <q>?</q>. 65EL02: 65C02 timing for the shared
+opcodes, <q>?</q> for the others. Totals of routines or loops are computed
+only inside <a href="#d_cycles">.cycles/.endcycles</a> blocks, with an
+explicit number of iterations.</p>
+
+<pre>
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+.1000    [ 2     ]  a2 00                    ldx #$00                  ldx #$00
+.1002    [ 2     ]  e8                       inx               loop    inx
+.1003    [ 2     ]  e0 10                    cpx #$10                  cpx #$10
+.1005    [ 2/3   ]  d0 fb                    bne $1002                 bne loop
+.1007    [ 4-5   ]  bd 34 12                 lda $1234,x               lda $1234,x
+</pre></dd>
+
+<dt><b>--list-classic</b><a name="o_list-classic" href="#o_list-classic"></a>
+
+<dd>65tass only. The 65tass listing uses only spaces and fixed columns (9
+characters for the address, 11 for the cycles, 25 for the hex bytes, so 8 data
+bytes fit, and 18 for the monitor), so it looks the same in every editor
+whatever its tab setting. A text that is too long for its column is followed by
+one space instead of a line break. This option gives back the 64tass layout
+with tabs instead, the same as the listing of 64tass apart from the program
+name in the first line.</dd>
+
 <dt><b>--tab-size</b>=&lt;number&gt;<a name="o_tab-size" href="#o_tab-size"></a>
 
-<dd>By default the listing file is using a tab size of 8 to align the
-disassembly. This can be changed to other more favorable values like 4.
+<dd>With <code>--list-classic</code> the listing file is using a tab size of 8 to align the
+disassembly (the 65tass layout always uses spaces). This can be changed to other more favorable values like 4.
 Only spaces are used if 1 is selected. Please note that this has
 no effect on the source code on the right hand side.</dd>
 
@@ -7011,6 +7098,7 @@ already.
 <a href="#d_continueif">.continueif</a>
 <a href="#d_cpu">.cpu</a>
 <a href="#d_cwarn">.cwarn</a>
+<a href="#d_cycles">.cycles</a>
 <a href="#d_databank">.databank</a>
 <a href="#d_default">.default</a>
 <a href="#d_dint">.dint</a>
@@ -7035,6 +7123,7 @@ already.
 <a href="#d_endc">.endc</a>
 <a href="#d_endalignblk">.endalignblk</a>
 <a href="#d_endcomment">.endcomment</a>
+<a href="#d_endcycles">.endcycles</a>
 <a href="#d_endencode">.endencode</a>
 <a href="#d_endf">.endf</a>
 <a href="#d_endfor">.endfor</a>

@@ -94,6 +94,8 @@ struct list_output_s {
     bool linenum;
     bool verbose;
     bool append;
+    bool cycles;     /* 65tass: --list-cycles */
+    bool classic;    /* 65tass: --list-classic (64tass tab layout) */
 };
 
 struct make_output_s {

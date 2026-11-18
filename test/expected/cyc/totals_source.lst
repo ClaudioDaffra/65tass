@@ -1,0 +1,22 @@
+;Offset  ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/totals_source.asm
+
+.1000    a2 00                    ldx #$00                  ldx #$00                ;@ a2 00 /2
+.1002    e8                       inx               loop    inx                     ;@ e8 /1
+.1003    e0 10                    cpx #$10                  cpx #$10                ;@ e0 10 /2
+.1005    d0 fb                    bne $1002                 bne loop                ;@ d0 fb /2
+=(111,111)                                          loop_t  .endcycles
+;******  Cycles: 111 (16 iterations, loop branch taken 15 times)
+.1007    ad 19 d0                 lda $d019         irq     lda $d019               ;@ ad 19 d0 /3
+.100a    8d 19 d0                 sta $d019                 sta $d019               ;@ 8d 19 d0 /3
+.100d    f0 03                    beq $1012                 beq +                   ;@ f0 03 /2
+.100f    ee 20 d0                 inc $d020                 inc $d020               ;@ ee 20 d0 /3
+.1012    4c 31 ea                 jmp $ea31         +       jmp $ea31               ;@ 4c 31 ea /3
+=(19,20)                                            irq_t   .endcycles
+;******  Cycles: 19-20 (1 iteration)
+>1015    6f 00 6f 00                                        .word loop_t            ;@ 6f 00 6f 00 /4
+>1019    13 14                                              .byte irq_t             ;@ 13 14 /2
+>101b    01                                                 .byte irq_t[1] - irq_t[0]       ;@ 01 /1
+
+;******  End of listing

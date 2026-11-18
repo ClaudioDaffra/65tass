@@ -1,0 +1,11 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/totals_45gs02.asm
+
+.2000    [ +     ]  42                       neg a                     ldq $12                 ;@ 42 42 a5 12 /4 ~?
+.2001    [ +     ]  42                       neg a
+.2002    [ ?     ]  a5 12                    lda $12
+.2004    [ 1     ]  1b                       inz                       inz                     ;@ 1b /1 ~1
+;******  Cycles: unknown (1 instruction without timing)
+
+;******  End of listing

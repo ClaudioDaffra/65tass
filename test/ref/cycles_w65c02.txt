@@ -1,0 +1,4 @@
+# W65C02 (WDC): WAI e STP.
+cb 3        # wai
+db 3        # stp
+80 3        # bra

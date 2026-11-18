@@ -13,9 +13,13 @@
 #   ;; expect: error        il test deve fallire con gli errori attesi
 # Si confrontano: binario (.bin), listing senza intestazione (.lst),
 # messaggi (.err) e le annotazioni ';@' (tools/check_opcodes.py).
+# Con l'assemblatore del progetto c'e' anche il test "cicli/riferimenti":
+# la tabella dei cicli (cycles.c) contro le fonti indipendenti di test/ref
+# (tools/cycles_dump.c, tools/check_cycles.py).
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
-ASM=${ASM:-$HERE/../65tass}
+ROOT=$(cd "$HERE/.." && pwd)
+ASM=${ASM:-$ROOT/65tass}
 UPDATE=0
 KEEP=0
 FILTER=
@@ -62,6 +66,9 @@ for src in src/*/*.asm; do
     else
         [ $rc -eq 0 ] || problems="$problems [errore rc=$rc: $(head -3 "$o.err" | tr '\n' ' ')]"
         files="bin lst err"
+        # un altro assemblatore (64tass) ha solo il formato classico del
+        # listing: si confrontano binario e messaggi
+        [ "$ASM" = "$ROOT/65tass" ] || files="bin err"
     fi
     for ext in $files; do
         got=$o.$ext
@@ -91,6 +98,21 @@ for src in src/*/*.asm; do
         printf '  FALLITO %s%s\n' "$name" "$problems"
     fi
 done
+name=cicli/riferimenti
+case "$name" in *"$FILTER"*) dorefs=1 ;; *) dorefs=0 ;; esac
+if [ $dorefs -eq 1 ] && [ "$ASM" = "$ROOT/65tass" ]; then
+    if [ -f "$ROOT/cycles.o" ] && [ -f "$ROOT/opcodes.o" ] &&
+       cc -I"$ROOT" -o "$OUT/cycles_dump" tools/cycles_dump.c "$ROOT/cycles.o" "$ROOT/opcodes.o" &&
+       python3 -I tools/check_cycles.py "$OUT/cycles_dump" "$HERE" > "$OUT/cycles.chk"; then
+        pass=$((pass + 1))
+        printf '  ok    %s (%s)\n' "$name" "$(grep -c ': [0-9]* \(opcode\|righe\)' "$OUT/cycles.chk") fonti"
+    else
+        fail=$((fail + 1))
+        failed="$failed $name"
+        printf '  FALLITO %s\n' "$name"
+        [ -f "$OUT/cycles.chk" ] && sed 's/^/      /' "$OUT/cycles.chk" | head -30
+    fi
+fi
 [ $UPDATE -eq 1 ] && echo "attesi aggiornati in $HERE/expected"
 [ $KEEP -eq 1 ] && echo "output in $OUT"
 echo "risultato: $pass passati, $fail falliti${failed:+ (}${failed# }${failed:+)}"

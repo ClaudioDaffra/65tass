@@ -33,12 +33,22 @@
 #include "arguments.h"
 #include "macro.h"
 #include "version.h"
+#include "cycles.h"
 
 #define LINE_WIDTH 8
 #define ADDR_WIDTH 8
 #define LADDR_WIDTH 8
 #define HEX_WIDTH 16
 #define MONITOR_WIDTH 16
+#define CYCLES_WIDTH 8
+
+/* 65tass layout (default): only spaces, fixed columns, cycles after the
+   address. --list-classic gives the 64tass layout above. */
+#define M_ADDR_WIDTH 9
+#define M_LADDR_WIDTH 9
+#define M_CYCLES_WIDTH 11
+#define M_HEX_WIDTH 25
+#define M_MONITOR_WIDTH 18
 
 bool listing_pccolumn;
 unsigned int nolisting;   /* listing */
@@ -47,15 +57,15 @@ const uint8_t *llist = NULL;
 typedef struct Listing {
     size_t c;
     char *s;
-    char buf[LINE_WIDTH + ADDR_WIDTH + LADDR_WIDTH + 3*16];
+    char buf[256];
     char hex[16];
     struct {
-        unsigned int addr, laddr, hex, monitor, source;
+        unsigned int addr, laddr, hex, monitor, cycles, source;
     } columns;
     FILE *flist;
     uint16_t lastfile;
     unsigned int tab_size;
-    bool linenum, verbose, monitor, pccolumn, source;
+    bool linenum, verbose, monitor, pccolumn, source, cycles, modern;
 } Listing;
 
 static void flushbuf(Listing *ls) {
@@ -71,7 +81,14 @@ static void newline(Listing *ls) {
 static void padding2(Listing *ls, unsigned int t) {
     unsigned int ts;
     size_t c = ls->c + (size_t)(ls->s - ls->buf);
-    if (c >= t) {*ls->s++ = '\n'; flushbuf(ls); c = 0;}
+    if (c >= t) {
+        if (ls->modern) {
+            /* too long for its column: one space, the line stays whole */
+            *ls->s++ = ' ';
+            return;
+        }
+        *ls->s++ = '\n'; flushbuf(ls); c = 0;
+    }
     ts = ls->tab_size;
     if (ts > 1) {
         c -= c % ts;
@@ -161,19 +178,31 @@ bool listing_open(const struct list_output_s *output, int argc, char *argv[]) {
     ls->flist = flist;
     ls->linenum = arguments.list.linenum;
     ls->pccolumn = listing_pccolumn;
+    ls->modern = !arguments.list.classic;
+    ls->cycles = arguments.list.cycles;
     ls->columns.addr = arguments.list.linenum ? LINE_WIDTH : 0;
-    ls->columns.laddr = ls->columns.addr + ADDR_WIDTH;
-    ls->columns.hex = ls->columns.laddr + (ls->pccolumn ? LADDR_WIDTH : 0);
-    ls->columns.monitor = ls->columns.hex + HEX_WIDTH;
-    ls->columns.source = ls->columns.monitor + (arguments.list.monitor ? MONITOR_WIDTH : 0);
-    ls->tab_size = arguments.tab_size;
+    if (ls->modern) {
+        ls->columns.laddr = ls->columns.addr + M_ADDR_WIDTH;
+        ls->columns.cycles = ls->columns.laddr + (ls->pccolumn ? M_LADDR_WIDTH : 0);
+        ls->columns.hex = ls->columns.cycles + (ls->cycles ? M_CYCLES_WIDTH : 0);
+        ls->columns.monitor = ls->columns.hex + M_HEX_WIDTH;
+        ls->columns.source = ls->columns.monitor + (arguments.list.monitor ? M_MONITOR_WIDTH : 0);
+        ls->tab_size = 1;
+    } else {
+        ls->columns.laddr = ls->columns.addr + ADDR_WIDTH;
+        ls->columns.hex = ls->columns.laddr + (ls->pccolumn ? LADDR_WIDTH : 0);
+        ls->columns.monitor = ls->columns.hex + HEX_WIDTH;
+        ls->columns.cycles = ls->columns.monitor + (arguments.list.monitor ? MONITOR_WIDTH : 0);
+        ls->columns.source = ls->columns.cycles + (ls->cycles ? CYCLES_WIDTH : 0);
+        ls->tab_size = arguments.tab_size;
+    }
     ls->verbose = arguments.list.verbose;
     ls->monitor = arguments.list.monitor;
     ls->source = arguments.list.source;
     ls->lastfile = 0;
     ls->s = ls->buf;
 
-    if (!output->append) fputs("\n; 64tass Turbo Assembler Macro V" VERSION " listing file", flist);
+    if (!output->append) fputs("\n; 65tass Turbo Assembler Macro V" VERSION " listing file", flist);
     fputs("\n;", flist);
     for (i = 0; i < argc; i++) {
         putc(' ', flist);
@@ -192,11 +221,19 @@ bool listing_open(const struct list_output_s *output, int argc, char *argv[]) {
         padding2(ls, ls->columns.laddr);
         out_txt(ls, ";PC");
     }
+    if (ls->cycles && ls->modern) {
+        padding2(ls, ls->columns.cycles);
+        out_txt(ls, ";Cycles");
+    }
     padding2(ls, ls->columns.hex);
     out_txt(ls, ";Hex");
     if (ls->monitor) {
         padding2(ls, ls->columns.monitor);
         out_txt(ls, ";Monitor");
+    }
+    if (ls->cycles && !ls->modern) {
+        padding2(ls, ls->columns.cycles);
+        out_txt(ls, ";Cycles");
     }
     if (ls->source) {
         padding2(ls, ls->columns.source);
@@ -508,9 +545,23 @@ void listing_instr(unsigned int cod, uint32_t adr, int ln) {
     *ls->s++ = '.';
     printaddr2(ls, addr2, addr);
     if (ln >= 0) {
+        char cyc[CYCLES_TEXT_LEN];
+        if (ls->cycles) {
+            cycles_text(cyc, current_cpu, cod, adr, ln, current_address->l_address);
+            if (ls->modern) {
+                char box[CYCLES_TEXT_LEN + 8];
+                snprintf(box, sizeof box, "[ %-5s ]", cyc);
+                padding2(ls, ls->columns.cycles);
+                out_txt(ls, box);
+            }
+        }
         printhex(ls, cod ^ outputeor, adr ^ outputeor, ln);
         if (ls->monitor) {
             printmon(ls, cod, ln, adr);
+        }
+        if (ls->cycles && !ls->modern) {
+            padding2(ls, ls->columns.cycles);
+            out_txt(ls, cyc);
         }
     }
     if (!ls->source || printllist(ls)) flushbuf(ls);
@@ -594,6 +645,19 @@ void listing_mem(const uint8_t *data, size_t len, address_t myaddr, address_t my
     }
     exitnow = true;
     goto flush;
+}
+
+/* 65tass: total of a .cycles/.endcycles block */
+void listing_cycles(const char *txt) {
+    Listing *const ls = listing;
+    if (ls == NULL || nolisting != 0 || in_function) return;
+    if (ls->linenum) {
+        padding2(ls, ls->columns.addr);
+        flushbuf(ls);
+    }
+    fputs(";******  Cycles: ", ls->flist);
+    fputs(txt, ls->flist);
+    newline(ls);
 }
 
 void listing_file(const char *txt, const struct file_s *file) {

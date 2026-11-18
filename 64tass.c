@@ -55,6 +55,7 @@
 
 #include "listobj.h"
 #include "floatobj.h"
+#include "cycles.h"
 #include "codeobj.h"
 #include "strobj.h"
 #include "addressobj.h"
@@ -223,6 +224,7 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x67" "continueif",
     "\x37" "cpu",
     "\x33" "cwarn",
+    "\x7c" "cycles",
     "\x28" "databank",
     "\x55" "default",
     "\x0d" "dint",
@@ -242,6 +244,7 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x3a" "endblock",
     "\x1c" "endc",
     "\x1c" "endcomment",
+    "\x7d" "endcycles",
     "\x70" "endencode",
     "\x52" "endf",
     "\x6c" "endfor",
@@ -361,7 +364,7 @@ typedef enum Command_types {
     CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT, CMD_ENDFOR,
     CMD_ENDREPT, CMD_ENDWHILE, CMD_ENCODE, CMD_ENDENCODE, CMD_TDEF,
     CMD_ALIGNBLK, CMD_ENDALIGNBLK, CMD_ALIGNPAGEIND, CMD_ALIGNIND, CMD_FROM,
-    CMD_F124, CMD_F168, CMD_F248, CMD_F32, CMD_F88
+    CMD_F124, CMD_F168, CMD_F248, CMD_F32, CMD_F88, CMD_CYCLES, CMD_ENDCYCLES
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -2917,6 +2920,59 @@ MUST_CHECK Obj *compile(void)
                         newlabel = NULL; epoint = cmdpoint; goto as_command;
                     }
                     switch (prm) {
+                    case CMD_ENDCYCLES: /* name .endcycles (65tass) */
+                        {
+                            char txt[CYCLES_TOTAL_LEN];
+                            uint64_t cmin, cmax;
+                            bool cunknown;
+                            Label *label;
+                            if (!cycles_block_end(current_address->l_address, txt, &cmin, &cmax, &cunknown)) {
+                                err_msg2(ERROR______EXPECTED, "'.cycles'", &cmdpoint);
+                                goto breakerr;
+                            }
+                            if (cunknown) val = ref_none();
+                            else {
+                                Tuple *tuple = new_tuple(2);
+                                tuple->data[0] = int_from_uval((uval_t)(cmin > 0xffffffffu ? 0xffffffffu : cmin));
+                                tuple->data[1] = int_from_uval((uval_t)(cmax > 0xffffffffu ? 0xffffffffu : cmax));
+                                val = Obj(tuple);
+                            }
+                            listing_equal(val);
+                            listing_cycles(txt);
+                            label = find_label3(&labelname, mycontext, strength);
+                            if (label == NULL) label = new_label(&labelname, mycontext, strength, current_file_list);
+                            if (label->value != NULL) {
+                                if (label->defpass == pass) {
+                                    val_destroy(val);
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                } else {
+                                    if (label->fwpass == pass) fwcount--;
+                                    if (!constcreated && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    label->constant = true;
+                                    label->owner = false;
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    label->ref = false;
+                                    const_assign(label, val);
+                                }
+                            } else {
+                                if (!constcreated) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                label->constant = true;
+                                label->owner = false;
+                                label->value = val;
+                                label->epoint = epoint;
+                                label->ref = false;
+                            }
+                            goto finish;
+                        }
                     case CMD_VAR: /* variable */
                         {
                             bool error2;
@@ -5316,6 +5372,27 @@ MUST_CHECK Obj *compile(void)
                     listing_line(epoint.pos);
                 }
                 break;
+            case CMD_CYCLES: if ((waitfor->skip & 1) != 0)
+                { /* .cycles (65tass) */
+                    uval_t uval = 1;
+                    struct values_s *vs;
+                    listing_line(epoint.pos);
+                    if (!get_exp(0, 0, 1, &epoint)) goto breakerr;
+                    vs = get_val();
+                    if (vs != NULL && touval2(vs, &uval, 32)) uval = 1;
+                    cycles_block_begin((uint32_t)uval, current_address->l_address);
+                }
+                break;
+            case CMD_ENDCYCLES: if ((waitfor->skip & 1) != 0)
+                { /* .endcycles (65tass) */
+                    char txt[CYCLES_TOTAL_LEN];
+                    uint64_t cmin, cmax;
+                    bool cunknown;
+                    listing_line(epoint.pos);
+                    if (!cycles_block_end(current_address->l_address, txt, &cmin, &cmax, &cunknown)) err_msg2(ERROR______EXPECTED, "'.cycles'", &epoint);
+                    else listing_cycles(txt);
+                }
+                break;
             case CMD_SHOWMAC: /* .showmac */
             case CMD_HIDEMAC: /* .hidemac */
                 if ((waitfor->skip & 1) != 0) {
@@ -5977,6 +6054,7 @@ static void one_pass(int argc, char **argv, int opts) {
     for (i = opts - 1; i <= argc; i++) {
         set_cpumode(arguments.cpumode); if (pass == 1 && i == opts - 1) constcreated = false;
         star = databank = dpage = strength = 0;longaccu = longindex = autosize = false;
+        cycles_reset();
         val_destroy(Obj(actual_encoding));
         actual_encoding = ref_enc(new_encoding(&none_enc, &nopoint));
         allowslowbranch = true; longbranchasjmp = false;
@@ -6339,7 +6417,7 @@ int main2(int *argc2, char **argv2[]) {
     init_encoding(arguments.to_ascii);
 
     if (arguments.quiet) {
-        puts("64tass Turbo Assembler Macro V" VERSION "\n"
+        puts("65tass Turbo Assembler Macro V" VERSION "\n"
              "64TASS comes with ABSOLUTELY NO WARRANTY; This is free software, and you\n"
              "are welcome to redistribute it under certain conditions; See LICENSE!\n");
         fflush(stdout);

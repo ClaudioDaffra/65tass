@@ -1,0 +1,18 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/w65c02.asm
+
+
+;******  Processing file: src/cyc/../cpu/w65c02.asm
+
+.1000    [ 3     ]  cb                       wai                       wai                     ;@ cb /1
+.1001    [ 3     ]  db                       stp                       stp                     ;@ db /1
+.1002    [ 3     ]  db                       stp                       hlt                     ;@ db /1   alias di STP
+.1003    [ 5     ]  f7 12                    smb 7,$12                 smb 7,$12               ;@ f7 12 /2
+.1005    [ 5/6   ]  ff 12 fd                 bbs 7,$12,$1005           bbs 7,$12,*             ;@ ff 12 fd /3
+.1008    [ 3     ]  80 fe                    bra $1008                 bra *                   ;@ 80 fe /2
+
+;******  Return to file: src/cyc/w65c02.asm
+
+
+;******  End of listing

@@ -1,0 +1,212 @@
+65TASS - FASE 1 (CICLI CPU NEL LISTING): RAPPORTO
+================================================
+
+Data: 2026-11-18. Base: 65tass = 64tass trunk r3301 + aggiunte di 65tass.
+Richiesta di riferimento: feature request #20 di 64tass (l'autore non pensa
+di farla, quindi e' solo di 65tass).
+
+SINTESI
+-------
+- Nuova opzione --list-cycles (e --no-list-cycles), spenta di default: i
+  listing senza l'opzione non cambiano (tutti i test di Fase 0 uguali).
+- Colonna ;Cycles dopo il disassemblato (dopo l'esadecimale con -m).
+- Tabelle per tutte le CPU di 65tass, quindi per tutte le macchine
+  Commodore: NMOS 6502/6510/8500/8502/7501/8501 (C64, VIC-20, PET, C128,
+  Plus/4, C16) con gli opcode illegali, 65DTV02 (C64 DTV), 4510 (C65),
+  45GS02 (MEGA65); e per le altre macchine: 65C02, R65C02, W65C02, 65816,
+  65CE02, 65EL02.
+- Verifica: 256 opcode NMOS uguali alla tabella indipendente di cd65; 256
+  opcode di 65CE02/4510/45GS02 uguali alle regole per gruppi della C65
+  System Specification; 65C02/R65C02/W65C02/65816/DTV/65EL02 uguali ai
+  valori presi dai data sheet (133 righe in 8 file di riferimento).
+- Totali con ipotesi esplicita: .cycles <iterazioni> ... .endcycles
+  (punto 5).
+- I totali si usano anche nel sorgente: "nome .endcycles" -> (min, max).
+- Suite: 44 test, tutti verdi (19 nuovi in cyc/, err/endcycles_alone,
+  err/cycles_budget e il test "cicli/riferimenti").
+
+
+1. OPZIONE E FORMATO
+--------------------
+  65tass --m4510 --list-cycles -L list.txt sorgente.asm
+
+  ;Offset ;Hex            ;Monitor        ;Cycles ;Source
+  .1000   a2 00           ldx #$00        2               ldx #$00
+  .1002   e8              inx             2       loop    inx
+  .1003   e0 10           cpx #$10        2               cpx #$10
+  .1005   d0 fb           bne $1002       2/3             bne loop
+  .1007   bd 34 12        lda $1234,x     4-5             lda $1234,x
+
+  4       numero fisso di cicli
+  4-5     minimo-massimo: indice che puo' cambiare pagina, modo decimale del
+          65C02, modo nativo/emulazione del 65816
+  2/3     branch: non preso / preso
+  2/4p    branch preso che cambia pagina (p): l'assemblatore conosce la
+          destinazione, quindi il valore e' esatto
+  4p      branch sempre preso (BRA) che cambia pagina
+  7*n     MVN/MVP del 65816: 7 cicli per byte
+  -       l'istruzione blocca la CPU (JAM dell'NMOS)
+  +       prefisso del 45GS02, contato con l'istruzione seguente
+  ?       nessun tempo documentato per questa CPU e questo opcode
+
+  Il cambio di pagina di un branch si calcola fra l'indirizzo dopo
+  l'istruzione e la destinazione (come fa la CPU). Il trucco "gcc"
+  (branch senza operando, che salta un byte) mostra 2/3-4 perche' la
+  destinazione non e' un operando.
+
+
+2. FONTI E SCELTE PER CPU
+-------------------------
+  NMOS 6502 e illegali (--m65xx, --m6502): MCS6500; verificati contro
+    test/ref/nmos_cycles_cd65.txt, estratta dalla tabella di cd65
+    (src/mir6502Opcode.c, src/mir6502OpcodeMatrix.c; gli illegali sono
+    verificati da cd65 con SingleStepTests). 256 opcode uguali.
+  65DTV02: come l'NMOS piu' BRA 3, SAC 2, SIR 2. Questi tre valori NON
+    hanno una fonte nella cartella c65doc: da confermare.
+  65C02, R65C02, W65C02: tempi WDC/Rockwell. ADC/SBC +1 in modo decimale;
+    (zp) 5; JMP (abs) 6; ASL/LSR/ROL/ROR abs,x 6 +1 se cambia pagina;
+    INC/DEC abs,x 7; BRA 3 (+1 pagina); RMB/SMB 5; BBR/BBS 5/6 (+1
+    pagina); WAI e STP 3.
+  65816: tempi WDC con le note del data sheet: +1 con m=0 (+2 nei
+    read-modify-write), +1 con x=0, +1 se il byte basso di D non e' zero,
+    letture indicizzate +1 con x=0 o con cambio di pagina, BRK/COP/RTI +1
+    in modo nativo, branch +1 di pagina solo in emulazione. La colonna usa
+    lo stato che conosce l'assemblatore: .as/.al, .xs/.xl (anche con
+    .autsiz dopo REP/SEP) e .dpage. Il modo nativo/emulazione non lo conosce,
+    quindi mostra un intervallo.
+  65CE02 e 4510 (C65): Commodore 65 System Specification 2.3.7.5 e data
+    sheet CBM 4510 (C:\prj\c65doc). Nessuna penalita' di pagina; i branch
+    impiegano lo stesso tempo presi o no: byte relative 2, word relative 3,
+    BSR 5, BBR/BBS 4. Dati che mancano nei documenti: TRB/TSB (presi come
+    gli altri read-modify-write: 4 base page, 5 absolute). MAP 4 cicli (dal
+    data sheet, OCR "5C 1 4"). L'AUG ($5C) del 65CE02 mostra "?".
+  45GS02 (MEGA65): tempi del 4510 per le istruzioni del 4510. Le istruzioni
+    con prefisso (42 42 per Q, EA per [zp],z) mostrano "+" sui prefissi e
+    "?" sull'istruzione: nella cartella non c'e' una tabella del MEGA65.
+  65EL02: tempi del 65C02 per gli opcode comuni, "?" per i 77 opcode propri
+    del 65EL02 (nessuna fonte).
+
+
+3. VERIFICA
+-----------
+  test/tools/cycles_dump.c stampa la tabella di una CPU (si compila con
+  cycles.o e opcodes.o). test/tools/check_cycles.py la confronta con:
+  - test/ref/nmos_cycles_cd65.txt (256 opcode NMOS, fonte indipendente);
+  - regole per gruppi scritte dalla C65 System Specification ("base page 3,
+    absolute 4, indiretti 5..."), applicate a mnemonico e modo di ognuna
+    delle 263 righe di test/src/cpu/4510.asm, per 65CE02, 4510 e 45GS02:
+    metodo diverso dalla tabella per opcode di cycles.c;
+  - test/ref/cycles_<cpu>.txt per 65C02, R65C02, W65C02, 65816 (anche con
+    m=0/x=0 e con D basso diverso da zero), 65DTV02, 65EL02.
+  Risultato: 0 differenze. Prova negativa: tre errori inseriti apposta
+  (NMOS $01, 4510 $E3, 65816 $A9 con m=0) vengono segnalati tutti.
+  In piu' test/src/cyc/ ha i listing con la colonna dei cicli per tutte le
+  CPU e quattro sorgenti con i cicli attesi scritti a mano (~): loop della
+  road map, branch che cambiano pagina in avanti e all'indietro, BRA e
+  BBS del 65C02, stati m/x/D del 65816, prefissi del 45GS02.
+
+
+4. CODICE TOCCATO
+-----------------
+  cycles.c, cycles.h   nuovi: tabelle, testo della colonna, totali dei blocchi
+  listing.c, listing.h colonna ;Cycles e riga ";******  Cycles:" dei totali
+  64tass.c             direttive .cycles e .endcycles (CMD_CYCLES,
+                       CMD_ENDCYCLES), azzeramento a ogni passata
+  instruction.c        dump_prefix(): segna i prefissi del 45GS02;
+                       dump_instr() somma le istruzioni ai blocchi .cycles
+                       a ogni passata (cycles_account)
+  arguments.c/.h       --list-cycles / --no-list-cycles, help, usage
+  makefileLinuxGCC, makefileWindowsMingw, makefileWindowsCL: cycles.o
+  README.txt, README.html, 64tass.1, README.md, NEWS: documentazione
+  Compilazione con -Wall -Wextra: 0 avvisi.
+
+
+5. TOTALI: .cycles / .endcycles
+-------------------------------
+  Le direttive aprono e chiudono un blocco; il numero di iterazioni e'
+  l'ipotesi esplicita chiesta dalla road map:
+
+          ldx #$00
+          .cycles 16              ; 16 iterazioni (predefinito 1)
+  loop    inx
+          cpx #$10
+          bne loop
+          .endcycles
+
+  Nel listing, dopo il blocco:
+  ;******  Cycles: 111 (16 iterations, loop branch taken 15 times)
+
+  Regole (scritte anche nel manuale):
+  - ogni istruzione del blocco conta <iterazioni> volte;
+  - se l'ultima istruzione e' un branch che torna dentro il blocco (loop
+    branch) conta preso <iterazioni>-1 volte e non preso una volta: per il
+    loop d'esempio 16*(2+2) + 15*3 + 2 = 111;
+  - gli altri branch contano non presi per il minimo e presi per il
+    massimo, gli indici che cambiano pagina contano per il massimo: il
+    totale puo' essere un intervallo (es. 14-16). E' una stima prudente:
+    un branch preso che salta istruzioni del blocco le conta lo stesso;
+  - un blocco interno conta come un'istruzione del blocco esterno (fino a
+    16 livelli): loop annidato 8 x 4 = 207 cicli nel test;
+  - un'istruzione senza tempo documentato rende il totale "unknown"
+    (45GS02 con prefisso, 65EL02, MVN/MVP, JAM);
+  - sul 4510 i branch costano lo stesso presi o no, quindi il totale e'
+    esatto senza ipotesi sui branch;
+  - .endcycles senza .cycles e' un errore; serve il listing (-L), non
+    --list-cycles.
+  Test: cyc/totals_6502, cyc/totals_c65, cyc/totals_45gs02 (totali attesi
+  calcolati a mano, ;=cycles) e err/endcycles_alone.
+
+  Totali nel sorgente: con un'etichetta davanti, "nome .endcycles"
+  assegna a nome la tupla costante (minimo, massimo):
+
+          .cerror irq_t[1] > 63, "irq troppo lento: ", irq_t[1], " cicli"
+          .cycles
+  irq     lda $d019
+          ...
+  irq_t   .endcycles              ; irq_t = (19, 20)
+
+  - il conteggio avviene a ogni passata (instruction.c, dump_instr), non
+    solo nel listing: funziona senza -L e si puo' usare prima del blocco;
+  - se il totale e' sconosciuto l'etichetta vale none (usarla e' un
+    errore);
+  - test: cyc/totals_source (valori scritti nel binario: .word loop_t ->
+    6f 00 6f 00) ed err/cycles_budget (.cerror che scatta: "loop troppo
+    lento: 111 cicli"). Suite: 44 test verdi.
+
+
+6. FORMATO DEL LISTING (richiesta del 2026-11-18)
+-------------------------------------------------
+  Il listing di 64tass allinea le colonne con tabulazioni da 8: con un
+  editor a 4 (o con le righe di dati da 8 byte, 23 caratteri in una
+  colonna da 16) le colonne non si allineano piu'.
+  Nuovo formato predefinito di 65tass, solo spazi e colonne fisse:
+
+  ;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+  .080d    [ 6     ]  20 14 08                 jsr $0814                 jsr scrivi_messaggio
+  .0816    [ 4-5   ]  bd 36 08                 lda $0836,x               lda messaggio,x
+  .0819    [ 2/3   ]  f0 06                    beq $0821                 beq fine_msg
+  >0836               43 49 41 4f 20 44 41 4c                            .text "CIAO DAL 6502",13
+
+  - colonne: indirizzo 9, cicli 11 ("[ 4-5   ]", larga 5 per contenere
+    anche 2/3-4 e 2/4p), esadecimale 25 (8 byte di dati), monitor 18;
+    senza --list-cycles la colonna dei cicli non c'e';
+  - un testo troppo lungo per la sua colonna e' seguito da uno spazio
+    invece di andare a capo; il buffer di riga passa da 72 a 256
+    caratteri;
+  - --list-classic ridà il formato di 64tass con le tabulazioni, identico
+    tranne il nome del programma nella prima riga (test lst/: gli attesi
+    sono i listing di prima, dalla riga ";Offset" in poi);
+  - --tab-size vale solo per il formato classico;
+  - tools/check_opcodes.py legge le colonne dall'intestazione: funziona con
+    i due formati. Suite: 49 test verdi.
+  Prova sul sorgente dell'autore: /home/claudio/temp/prova.asm.
+
+
+7. LIMITI E PROSSIMI PASSI
+--------------------------
+  - 45GS02: servono i tempi del MEGA65 (manuale MEGA65, appendice del
+    45GS02) per le istruzioni con prefisso.
+  - 65DTV02: confermare BRA/SAC/SIR con la documentazione del DTV.
+  - 65EL02: nessuna fonte.
+  - I cicli sono quelli della CPU: non contano i cicli rubati dal VIC
+    (badline, sprite) ne' il modo 2 MHz del C128 o i modi del C65.

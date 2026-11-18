@@ -1,0 +1,21 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/65dtv02.asm
+
+
+;******  Processing file: src/cyc/../cpu/65dtv02.asm
+
+.1000    [ 3     ]  12 fe                    bra $1000                 bra *                   ;@ 12 fe /2
+.1002    [ 2     ]  32 12                    sac #$12                  sac #$12                ;@ 32 12 /2
+.1004    [ 2     ]  42 12                    sir #$12                  sir #$12                ;@ 42 12 /2
+.1006    [ 5     ]  07 12                    slo $12                   slo $12                 ;@ 07 12 /2
+.1008    [ 4     ]  af 34 12                 lax $1234                 lax $1234               ;@ af 34 12 /3
+.100b    [ 8     ]  d3 12                    dcp ($12),y               dcp ($12),y             ;@ d3 12 /2
+.100d    [ 7     ]  ff 34 12                 isb $1234,x               isb $1234,x             ;@ ff 34 12 /3
+.1010    [ 2     ]  a9 12                    lda #$12                  lda #$12                ;@ a9 12 /2
+.1012    [ 6     ]  60                       rts                       rts                     ;@ 60 /1
+
+;******  Return to file: src/cyc/65dtv02.asm
+
+
+;******  End of listing

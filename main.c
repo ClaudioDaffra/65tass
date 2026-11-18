@@ -194,7 +194,7 @@ int wmain(int argc, wchar_t *argv2[]) {
     unicode_init();
 
     if (argc < 1) {
-        static wchar_t *argvd[1] = { (wchar_t *)L"64tass" };
+        static wchar_t *argvd[1] = { (wchar_t *)L"65tass" };
         argv2 = argvd;
         argc = 1;
     }
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
       unicode_init();
 
       if (argc < 1) {
-          static char *argvd[1] = { (char *)"64tass" };
+          static char *argvd[1] = { (char *)"65tass" };
           argv = argvd;
           argc = 1;
       }
@@ -315,7 +315,7 @@ int main(int argc, char *argv[]) {
     console_init();
 
     if (argc < 1) {
-        static char *argvd[1] = { (char *)"64tass" };
+        static char *argvd[1] = { (char *)"65tass" };
         argv = argvd;
         argc = 1;
     }

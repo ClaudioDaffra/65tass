@@ -1,0 +1,50 @@
+# 65816 (WDC W65C816S), con m=1 e x=1 (.as .xs), D basso = 0.
+# Branch: +1 se salta, +1 se cambia pagina solo in modo emulazione.
+a9 2        # lda #
+ad 4        # lda $abs
+bd 4-5      # lda $abs,x  +1 se cambia pagina
+b1 5-6      # lda ($dp),y
+a3 4        # lda $sr,s
+b3 7        # lda ($sr,s),y
+a7 6        # lda [$dp]
+b7 6        # lda [$dp],y
+af 5        # lda $long
+bf 5        # lda $long,x
+91 6        # sta ($dp),y
+99 5        # sta $abs,y
+06 5        # asl $dp
+0e 6        # asl $abs
+1e 7        # asl $abs,x
+00 7-8      # brk: +1 in modo nativo
+02 7-8      # cop
+40 6-7      # rti: +1 in modo nativo
+44 7*n      # mvp: 7 per byte
+54 7*n      # mvn
+10 2/3      # bpl (stessa pagina)
+80 3        # bra (stessa pagina)
+82 4        # brl
+22 8        # jsl
+6b 6        # rtl
+fc 8        # jsr ($abs,x)
+dc 6        # jml [$abs]
+5c 4        # jml $long
+6c 5        # jmp ($abs)
+7c 6        # jmp ($abs,x)
+62 6        # per
+f4 5        # pea
+d4 6        # pei ($dp)
+eb 3        # xba
+fb 2        # xce
+c2 3        # rep
+e2 3        # sep
+48 3        # pha
+68 4        # pla
+da 3        # phx
+fa 4        # plx
+0b 4        # phd
+2b 5        # pld
+8b 3        # phb
+ab 4        # plb
+4b 3        # phk
+cb 3        # wai
+db 3        # stp

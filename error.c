@@ -59,7 +59,7 @@ struct file_listnode_s {
 
 static struct file_listnode_s file_list;
 static const struct file_listnode_s *included_from = &file_list;
-static const char *prgname = "64tass";
+static const char *prgname = "65tass";
 
 struct errorbuffer_s {
     size_t max;

@@ -1,0 +1,14 @@
+# 65816 con m=0 e x=0 (.al .xl): +1 per m=0, +2 nei read-modify-write,
+# +1 per x=0; con x=0 le letture indicizzate prendono sempre il ciclo in piu'.
+a9 3        # lda #
+ad 5        # lda $abs
+bd 6        # lda $abs,x : 4 +1 (m) +1 (x=0)
+b1 7        # lda ($dp),y
+06 7        # asl $dp: 5 +2
+1e 9        # asl $abs,x: 7 +2
+a0 3        # ldy #
+ac 5        # ldy $abs
+bc 6        # ldy $abs,x : 4 +1 (x) +1 (x=0)
+48 4        # pha
+5a 4        # phy
+7a 5        # ply

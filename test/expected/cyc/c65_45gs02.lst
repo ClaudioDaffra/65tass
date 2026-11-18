@@ -1,0 +1,23 @@
+;Offset  ;Cycles    ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/cyc/c65_45gs02.asm
+
+.2000    [ 2     ]  a9 01                    lda #$01                  lda #1                  ;@ a9 01 /2 ~2
+.2002    [ 4     ]  bd 34 12                 lda $1234,x               lda $1234,x             ;@ bd 34 12 /3 ~4
+.2005    [ 5     ]  b2 12                    lda ($12),z               lda ($12),z             ;@ b2 12 /2 ~5
+.2007    [ 2     ]  d0 fe                    bne $2007                 bne *                   ;@ d0 fe /2 ~2
+.2009    [ 3     ]  d3 f5 0f                 bne $3000                 bne $3000               ;@ d3 /3 ~3
+.200c    [ 4     ]  5c                       map                       map                     ;@ 5c /1 ~4
+.200d    [ 1     ]  ea                       nop                       eom                     ;@ ea /1 ~1
+.200e    [ 2     ]  42                       neg a                     neg a                   ;@ 42 /1 ~2
+.200f    [ +     ]  42                       neg a                     ldq $12                 ;@ 42 42 a5 12 /4 ~?
+.2010    [ +     ]  42                       neg a
+.2011    [ ?     ]  a5 12                    lda $12
+.2013    [ +     ]  ea                       nop                       lda [$12],z             ;@ ea b2 12 /3 ~?
+.2014    [ ?     ]  b2 12                    lda ($12),z
+.2016    [ +     ]  42                       neg a                     inq                     ;@ 42 42 1a /3 ~?
+.2017    [ +     ]  42                       neg a
+.2018    [ ?     ]  1a                       inc a
+.2019    [ 2     ]  a9 02                    lda #$02                  lda #2                  ;@ a9 02 /2 ~2
+
+;******  End of listing

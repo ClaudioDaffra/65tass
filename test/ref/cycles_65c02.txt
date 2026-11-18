@@ -1,0 +1,49 @@
+# 65C02 (WDC W65C02S / Rockwell R65C02): opcode e testo atteso nel listing.
+# Solo gli opcode che cambiano rispetto all'NMOS o che il 65C02 aggiunge.
+# ADC/SBC: +1 ciclo in modo decimale; letture indicizzate: +1 se cambia pagina.
+61 6-7      # adc ($zp,x)
+65 3-4      # adc $zp
+69 2-3      # adc #
+6d 4-5      # adc $abs
+71 5-7      # adc ($zp),y  pagina + decimale
+72 5-6      # adc ($zp)
+75 4-5      # adc $zp,x
+79 4-6      # adc $abs,y
+7d 4-6      # adc $abs,x
+e9 2-3      # sbc #
+f2 5-6      # sbc ($zp)
+f9 4-6      # sbc $abs,y
+12 5        # ora ($zp)
+32 5        # and ($zp)
+52 5        # eor ($zp)
+92 5        # sta ($zp)
+b2 5        # lda ($zp)
+d2 5        # cmp ($zp)
+1a 2        # inc a
+3a 2        # dec a
+34 4        # bit $zp,x
+3c 4-5      # bit $abs,x
+89 2        # bit #
+04 5        # tsb $zp
+0c 6        # tsb $abs
+14 5        # trb $zp
+1c 6        # trb $abs
+64 3        # stz $zp
+74 4        # stz $zp,x
+9c 4        # stz $abs
+9e 5        # stz $abs,x
+5a 3        # phy
+7a 4        # ply
+da 3        # phx
+fa 4        # plx
+6c 6        # jmp ($abs)   (NMOS 5)
+7c 6        # jmp ($abs,x)
+80 3        # bra (stessa pagina)
+1e 6-7      # asl $abs,x   (NMOS 7 fisso)
+3e 6-7      # rol $abs,x
+5e 6-7      # lsr $abs,x
+7e 6-7      # ror $abs,x
+de 7        # dec $abs,x
+fe 7        # inc $abs,x
+ea 2        # nop
+10 2/3      # bpl (stessa pagina)

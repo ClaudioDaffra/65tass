@@ -1,0 +1,7 @@
+# 65816 con il byte basso di D diverso da zero (.dpage $1201): +1 ciclo in
+# tutti i modi direct page.
+a5 4        # lda $dp
+b1 6-7      # lda ($dp),y: 5 +1 (DL), +1 se cambia pagina
+06 6        # asl $dp
+d4 7        # pei ($dp)
+ad 4        # lda $abs: non cambia

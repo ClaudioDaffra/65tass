@@ -37,6 +37,7 @@
 #include "errorobj.h"
 #include "memblocksobj.h"
 #include "eval.h"
+#include "cycles.h"
 
 static const uint32_t *mnemonic;    /* mnemonics */
 static const uint16_t *opcode;      /* opcodes */
@@ -140,8 +141,17 @@ static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)
         case 1: d[1] = (uint8_t)temp; FALL_THROUGH; /* fall through */
         default: d[0] = (uint8_t)(cod ^ outputeor);
         }
+        if (cycles_block_open()) cycles_account(current_cpu, cod, adr, ln, current_address->l_address);
     }
     listing_instr(cod, adr, ln);
+}
+
+/* 65tass: 45GS02 prefix byte (42 42 for Q, EA for [zp],z); the cycle column
+   of the listing counts it together with the following instruction. */
+static void dump_prefix(unsigned int cod, linepos_t epoint) {
+    cycles_prefix = true;
+    dump_instr(cod, 0, 0, epoint);
+    cycles_prefix = false;
 }
 
 typedef enum Adrgen {
@@ -435,8 +445,8 @@ static void qprefix(int prm, linepos_t epoint) {
         || prm == current_cpu->asd
         || prm == current_cpu->lsd
         || prm == current_cpu->stq) {
-        dump_instr(0x42, 0, 0, epoint);
-        dump_instr(0x42, 0, 0, epoint);
+        dump_prefix(0x42, epoint);
+        dump_prefix(0x42, epoint);
     }
 }
 
@@ -523,8 +533,8 @@ retry:
         if (is_amode(amode, ADR_IMPLIED)) {
             if (diagnostics.implied_reg && is_amode(amode, ADR_REG)) err_msg_implied_reg(epoint, mnemonic[prm]);
             if (opcode == c45gs02.opcode && (prm == current_cpu->inq || prm == current_cpu->deq)) {
-                dump_instr(0x42, 0, 0, epoint);
-                dump_instr(0x42, 0, 0, epoint);
+                dump_prefix(0x42, epoint);
+                dump_prefix(0x42, epoint);
             }
             adrgen = AG_IMP; opr = OPR_IMPLIED;
             break;
@@ -591,7 +601,7 @@ retry:
                     if (pline[epoint2->pos] == '[') epoint2->pos++;
                     if (opcode == c45gs02.opcode) {
                         qprefix(prm, epoint);
-                        dump_instr(0xea, 0, 0, epoint);
+                        dump_prefix(0xea, epoint);
                     }
                     break;
                 case OPR_ZP:
@@ -617,8 +627,8 @@ retry:
                         reg = (Reg_types)(ind - reg_names);
                         if (regopcode_table[cod][reg] != ____) {
                             if (reg == REG_Q && opcode == c45gs02.opcode) {
-                                dump_instr(0x42, 0, 0, epoint);
-                                dump_instr(0x42, 0, 0, epoint);
+                                dump_prefix(0x42, epoint);
+                                dump_prefix(0x42, epoint);
                             }
                             adrgen = AG_IMP;
                             break;

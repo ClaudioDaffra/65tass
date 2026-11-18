@@ -254,7 +254,7 @@ void memorymapfile(const Memblocks *mem, const struct output_s *output) {
     if (state.f == stdout && fflush(state.f) != 0) setvbuf(state.f, NULL, _IOLBF, 1024);
     clearerr(state.f); errno = 0;
 
-    if (!output->mapappend) fputs("\n64tass Turbo Assembler Macro V" VERSION " memory map file\n", state.f);
+    if (!output->mapappend) fputs("\n65tass Turbo Assembler Macro V" VERSION " memory map file\n", state.f);
     fputs("\nMemory map for output file: ", state.f);
     argv_print(output->name, state.f);
     fputs("\n\nType        Size      Range      Size    Name\n", state.f);

@@ -1,0 +1,10 @@
+# R65C02 (Rockwell): istruzioni sui bit e NOP con operando.
+07 5        # rmb 0,$zp
+87 5        # smb 0,$zp
+f7 5        # smb 7,$zp
+0f 5/6      # bbr 0,$zp,dest: 5, 6 se salta (+1 se cambia pagina)
+ff 5/6      # bbs 7,$zp,dest
+44 3        # nop $zp
+54 4        # nop $zp,x
+82 2        # nop #
+dc 4        # nop $abs
