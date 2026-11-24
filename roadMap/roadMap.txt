@@ -370,6 +370,20 @@ file, riga, colonna, gravità, nome della diagnostica, messaggio.
 Compatibile con VS Code e CI; l’output testuale resta com’è.
 Prove: sorgenti con errori noti e JSON atteso.
 
+STATO (2026-11-24): FATTA. Rapporto in roadMap/fase2_rapporto.txt.
+- Opzioni: --error-json=<file> ("-" = standard output),
+  --error-json-append=<file>, --no-error-json. Il testo non cambia (stessi
+  49 test di prima uguali); il JSON contiene gli stessi messaggi, anche con
+  --no-error.
+- Campi: severity, name ("-Wshadow"..., null se il messaggio non ha nome),
+  message, file, line, column (in caratteri, da 1), source, included_from
+  (catena degli include), notes (note dell'errore).
+- File JSON non scrivibile: errore fatale, codice di uscita 1.
+- Test: test/src/json, 8 test (errori, avvisi, -Werror=, include su due
+  livelli, macro, riga di comando, nessun messaggio, -w); il runner
+  controlla che il JSON sia valido con python3. Suite 57 test verdi.
+- Base per la Fase 9 (LSP, estensione VS Code).
+
 Fase 3 – Source map reale (priorità altissima)
 
 File che collega indirizzo, file sorgente e riga, anche dentro macro e file inclusi.
@@ -424,6 +438,50 @@ Tipo di dato big-endian (#28), mirroring dei banchi 65816 (#15), colori persiste
 (Fase 0: #31 e' arrivato con la fusione del trunk r3301; per #28 ci
 sono soluzioni con bytes()[::-1] in test/src/dir/bigendian.asm; #15 e' aperto
 e l'autore suggerisce gli scope.)
+Fase 11 – Operatori di byte a 32 bit: #<< e #>> (priorità media)
+
+Richiesta dell'utente del 2026-11-18. Estendere a 32 bit la logica lo/hi
+di < e >: la coppia < > prende i due byte della word bassa, la coppia
+<< >> i due byte della word alta.
+  <v  = byte 0 (bit 0-7)       >v  = byte 1 (bit 8-15)
+  <<v = byte 2 (bit 16-23)     >>v = byte 3 (bit 24-31)
+<< vale come ` (bank byte); >> è l'unico operatore davvero nuovo.
+Esempio 45GS02 (registro Q = A X Y Z, A meno significativo):
+  lda #<v / ldx #>v / ldy #<<v / ldz #>>v
+Stato attuale (provato con v = $44332211): <v=$11, >v=$22, `v=$33, il
+byte 3 solo con v >> 24. >`v prende i bit 8-23, quindi >>`v dà $33.
+Oggi #>>v si legge >(>v) e vale 0 senza avvisi; #<<v vale il byte 0.
+Regole:
+- Solo in posizione unaria: gli shift binari a << b e a >> b non cambiano.
+- Su bytes e float MBF (pf32/pf40) l'ordine è quello in memoria, come per
+  < > ` dopo la correzione di bytesobj.c.
+- Compatibilità: <<v, >>v e >>`v cambiano valore. Avviso sulle combinazioni
+  che oggi hanno un altro significato (>>`), e nota nel manuale: con 64tass
+  #>>v vale 0 senza errori.
+- Ordine dei byte (verificato il 2026-11-19): gli operatori scelgono il
+  byte per importanza (byte 0 = bit 0-7 ... byte 3 = bit 24-31), quindi non
+  c'e' da scegliere fra little e big endian. La famiglia 65xx e' little-endian:
+  <v >v <<v >>v sono i byte a +0 +1 +2 +3 di .dword v e i registri A X Y Z
+  del Q, quindi lda #<v / ldx #>v / ldy #<<v / ldz #>>v / stq zp scrive gli
+  stessi byte di .dword v. I float MBF sono gia' a posto: pf32 costruisce il
+  numero in modo che .dword dia l'ordine del BASIC (-1.5pf32 = $0000c081, in
+  memoria 81 c0 00 00: <f = esponente $81, >f = $c0, <<f e >>f = mantissa 2
+  e 3). Per dati big-endian (#28) resta bytes()[::-1].
+- Etichette (verificato il 2026-11-19): un'etichetta vale l'indirizzo
+  visto dalla CPU, non quello fisico nel file. Su 4510/45GS02 e' a 16 bit
+  (con * = $8001000 e --flat, "dove nop" vale $1000: `dove e dove >> 24
+  danno $00); sul 65816 e' a 24 bit (`dove = banco, byte 3 = $00). Quindi
+  su un'etichetta #<< e' 0 tranne sul 65816 e #>> e' sempre 0. Le costanti
+  invece hanno tutti i 32 bit (attic = $8123456: attic >> 24 = $08).
+  Leggere l'indirizzo fisico a 28 bit di un'etichetta sul MEGA65 (per
+  esempio con una funzione che restituisce l'indirizzo nel file) e' un'altra
+  modifica, legata a banking e MAP: da valutare nella Fase 5.
+Lavoro: un operatore nuovo (byte 3) nel lettore delle espressioni (eval.c),
+in operobj.c/oper_e.h e nei calc1 dei tipi (int, bits, bytes, float,
+address, code, gap, str, bool), circa 40 righe; poi test e documentazione.
+Prove: interi positivi e negativi, indirizzi, bytes, pf32/pf40, immediati
+fuori misura, shift binari invariati, tutte le CPU.
+
 Metodo per ogni fase
 Definire il comportamento atteso e la sintassi.
 Scrivere i casi di test.
@@ -432,4 +490,4 @@ Verificare su tutte le CPU supportate.
 Documentare sintassi, limiti e opzioni.
 Ordine riassuntivo
 
-Fase 0 → 1 (cicli) → 2 (JSON) → 3 (source map) → 4 (test) → 5 (memoria) → 6 (include once) → 7 → 8 → 9 → 10.
+Fase 0 → 1 (cicli) → 2 (JSON) → 3 (source map) → 4 (test) → 5 (memoria) → 6 (include once) → 7 → 8 → 9 → 10 → 11 (operatori << >>).

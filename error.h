@@ -116,7 +116,7 @@ extern void err_msg_immediate_note(linepos_t);
 extern void err_msg_enc_large(uval_t, linepos_t);
 extern void err_msg_big_address(linepos_t);
 extern void error_reset(void);
-extern void error_print(const struct error_output_s *);
+extern bool error_print(const struct error_output_s *);
 extern const struct file_list_s *parent_file_list(const struct file_list_s *);
 extern void enterfile(struct file_s *, linepos_t);
 extern void exitfile(void);

@@ -1,0 +1,134 @@
+65TASS - FASE 2 (DIAGNOSTICA JSON): RAPPORTO
+===========================================
+
+Data: 2026-11-24. Base: 65tass dopo la Fase 1 (64tass trunk r3301 +
+aggiunte di 65tass), versione "1.60.3243+".
+
+SINTESI
+-------
+- Nuova opzione --error-json=<file> ("-" = standard output), con
+  --error-json-append=<file> e --no-error-json. Spenta di default.
+- L'output testuale non cambia: i 49 test di prima sono uguali, e il
+  testo resta su stderr o nel file di -E.
+- Il JSON contiene esattamente i messaggi del testo, anche con --no-error
+  (che zittisce solo il testo).
+- Campi richiesti dalla road map: file, riga, colonna, gravita', nome della
+  diagnostica, messaggio; in piu' la riga sorgente, la catena degli include
+  e le note.
+- Suite: 57 test, tutti verdi (8 nuovi in test/src/json).
+
+
+1. OPZIONI
+----------
+  65tass --error-json=errori.json a.asm         JSON in un file
+  65tass --no-error --error-json=- a.asm        solo JSON, su stdout
+  --error-json-append=<file>                    aggiunge un oggetto per run
+  --no-error-json                               annulla un --error-json
+
+  - Il file si apre all'inizio della stampa dei messaggi: se non si puo'
+    aprire, l'errore fatale "can't write error file" compare nel testo
+    (con la posizione sulla riga di comando). Se la scrittura fallisce
+    (disco pieno, provato con /dev/full) c'e' un errore fatale su stderr.
+    In tutti e due i casi il codice di uscita e' 1, cosi' una CI non
+    prosegue senza il file. (-E invece, come in 64tass, non cambia il
+    codice di uscita.)
+  - Con -M il file JSON e' elencato fra i target, come il file di -E.
+  - Con "-" il riepilogo finale non va su stdout (come per -o -), cosi'
+    stdout contiene solo il JSON.
+
+
+2. FORMATO
+----------
+  Un oggetto JSON, un messaggio per riga (facile da leggere e da
+  confrontare con diff):
+
+  {"program":"65tass","version":"1.60.3243+","format":1,"diagnostics":[
+  {"severity":"warning","name":"-Wshadow","message":"shadow definition 'uno'","file":"a.asm","line":9,"column":1,"source":"uno     = 2","included_from":[],"notes":[{"severity":"note","name":null,"message":"original definition of 'uno' was here","file":"a.asm","line":7,"column":1,"source":"uno     = 1","included_from":[]}]},
+  {"severity":"warning","name":"-Wleading-zeros","message":"leading zeros ignored","file":"a.asm","line":12,"column":13,"source":"        lda 0001","included_from":[],"notes":[]}
+  ],"errors":0,"warnings":2}
+
+  severity       "error", "warning", "fatal"; "note" nelle note.
+                 Un avviso reso errore da -Werror= e' "error".
+  name           il " [-W...]" alla fine del messaggio testuale, tolto dal
+                 messaggio: "-Wshadow", "-Wleading-zeros"... null se il
+                 messaggio non ha nome (quasi tutti gli errori, .warn,
+                 .error, .cerror). 64tass da' un nome solo agli avvisi
+                 opzionali: dare un nome a ogni errore vorrebbe dire
+                 cambiare tutte le funzioni di error.c (da valutare con
+                 l'LSP della Fase 9).
+  message        testo del messaggio, senza il nome.
+  file           nome come nel testo; "<command line>" per un argomento
+                 della riga di comando (line = numero dell'argomento,
+                 source = l'argomento); null senza posizione (es. "can't
+                 open file" del sorgente principale).
+  line, column   da 1. La colonna conta i caratteri, non i byte (una
+                 tabulazione e' 1, "è" e' 1), cioe' e' la stessa del testo.
+  source         riga sorgente; dentro una macro la riga espansa (quella
+                 che il testo mostra sotto il messaggio).
+  included_from  catena degli include dal file piu' vicino al principale:
+                 [{"file","line","column"}...]. Il testo la stampa solo
+                 la prima volta ("In file included from"); il JSON la da'
+                 sempre per intero. L'espansione di una macro conta come
+                 un include, come nel testo.
+  notes          le note che il testo stampa dopo il messaggio.
+  errors,        quanti messaggi di quel tipo ci sono nella lista.
+  warnings
+  format         1; cambia solo se un campo cambia significato.
+
+  Come nel testo: con errori gli avvisi non compaiono, con -w nemmeno; i
+  messaggi doppi sono gia' tolti. Le stringhe sono UTF-8 (il sorgente e'
+  sempre convertito in UTF-8 da file.c) con gli escape JSON (\" \\ \t \n
+  \r \u00xx); un byte non valido diventa �.
+
+
+3. VERIFICA
+-----------
+  test/src/json (con ";; json: yes"):
+    errors     simbolo non definito, sintassi, .cerror con tab, "", \, è, €
+               (colonne in caratteri); l'avviso -Wleading-zeros e' nascosto
+    warnings   -Wshadow con nota, -Wleading-zeros, .warn (nome null), rc 0
+    werror     -Werror=leading-zeros: severity "error", nome conservato
+    include    errore in inc/json_b.asm incluso da inc/json_a.asm incluso da
+               include.asm: included_from con due elementi
+    macro      errore nell'argomento di una macro con le due note
+    cmdline    --output-exec=non_definito: file "<command line>"
+    clean      nessun messaggio: lista vuota, 0 e 0
+    nowarn     -Wall -w: lista vuota
+  run_tests.sh controlla che il file sia JSON valido (python3 -I, modulo
+  json) e lo confronta con expected/json/<nome>.json, con la versione
+  sostituita da "*". Gli attesi sono stati controllati a mano contro il
+  testo (.err) degli stessi test.
+  Prove a mano: --error-json=- con --no-error, file non apribile (rc 1),
+  /dev/full (rc 1), --error-json-append (due oggetti), --no-error-json,
+  -M, -D sbagliato (<command line>), sorgente inesistente (file null).
+  Compilazione con -Wall -Wextra: 0 avvisi.
+
+
+4. CODICE TOCCATO
+-----------------
+  error.c          json_string2, json_location, json_diagnostic,
+                   error_print_json; error_print apre il file JSON e
+                   restituisce true se non e' stato scritto
+  error.h          error_print restituisce bool
+  64tass.c         codice di uscita 1 se il JSON non e' stato scritto
+  arguments.c/.h   --error-json, --error-json-append, --no-error-json
+                   (campi json, json_pos, json_append in error_output_s),
+                   help, usage, stdout senza riepilogo con "-"
+  file.c           il file JSON fra i target di -M
+  makefileLinuxGCC, makefileWindowsMingw, makefileWindowsCL: error.o
+                   dipende da version.h
+  test/run_tests.sh   ";; json: yes"
+  README.txt, README.html, 64tass.1, README.md, NEWS, test/LEGGIMI.txt,
+  roadMap/roadMap.txt: documentazione
+
+
+5. LIMITI E PROSSIMI PASSI
+--------------------------
+  - Nessun nome per gli errori (vedi name). Per l'LSP (Fase 9) potrebbe
+    servire un codice stabile per ogni errore (Error_types).
+  - Nessuna colonna finale: 65tass conosce solo il punto d'inizio.
+  - VS Code: un "problem matcher" lavora gia' sul testo (file:riga:col:
+    gravita': messaggio); il JSON serve a un'estensione o all'LSP della
+    Fase 9, e alla CI (per esempio per le annotazioni di GitHub Actions).
+  - Il 64tass originale non ha l'opzione: con --asm i test json/
+    falliscono.

@@ -1,0 +1,8 @@
+;Offset  ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/json/nowarn.asm
+
+.1000    a5 01                    lda $01                   lda 0001
+.1002    60                       rts                       rts
+
+;******  End of listing

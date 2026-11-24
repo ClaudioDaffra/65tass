@@ -146,6 +146,23 @@ With a label (`name .endcycles`) the total is a constant tuple
 `(minimum, maximum)` that the source can check, for example
 `.cerror name[1] > 63, "too slow"`.
 
+## Diagnostics in JSON
+
+`--error-json=<file>` writes the error and warning messages in JSON as well
+(`-` for the standard output), for editors, language servers and CI. The text
+messages do not change. One object, one diagnostic per line:
+
+    65tass -Wall --error-json=errors.json a.asm
+
+    {"program":"65tass","version":"1.60.3243+","format":1,"diagnostics":[
+    {"severity":"warning","name":"-Wleading-zeros","message":"leading zeros ignored","file":"a.asm","line":12,"column":13,"source":"        lda 0001","included_from":[],"notes":[]}
+    ],"errors":0,"warnings":1}
+
+`name` is the diagnostic option (`-Wshadow`...) or null, `column` counts
+characters from 1, `included_from` is the include chain and `notes` the notes
+of the message. `--error-json-append` appends, `--no-error-json` turns it off.
+See README.txt for the details.
+
 ## Tests
 
 `test/` holds a regression suite: one source per CPU (all 256 opcodes for the

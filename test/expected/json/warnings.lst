@@ -1,0 +1,13 @@
+;Offset  ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/json/warnings.asm
+
+=1                                                  uno     = 1
+.1000                                               blocco
+=2                                                  uno     = 2
+.1000    a9 02                    lda #$02                  lda #uno
+.1002    a5 01                    lda $01                   lda 0001
+.1004    a9 01                    lda #$01                  lda #uno
+.1006    60                       rts                       rts
+
+;******  End of listing

@@ -1,0 +1,10 @@
+;Offset  ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/json/clean.asm
+
+.1000    a2 00                    ldx #$00                  ldx #$00
+.1002    e8                       inx               loop    inx
+.1003    d0 fd                    bne $1002                 bne loop
+.1005    60                       rts                       rts
+
+;******  End of listing

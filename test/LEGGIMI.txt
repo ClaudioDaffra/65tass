@@ -1,4 +1,4 @@
-65TASS - SUITE DI TEST (Fasi 0 e 1 della road map)
+65TASS - SUITE DI TEST (Fasi 0, 1 e 2 della road map)
 ==================================================
 
 Prova che 65tass produca sempre gli stessi byte, listing e messaggi, e
@@ -37,6 +37,10 @@ CARTELLE
               cpu/6502, cpu/4510, cpu/45gs02, cyc/loop_6502, dir/float65tass;
               gli attesi sono i listing di prima del formato a spazi, quindi
               il formato classico resta identico a quello di 64tass.
+  src/json/   Fase 2, messaggi in JSON (--error-json): errori, avvisi con
+              nome, -Werror=, include su due livelli (inc/json_a.asm,
+              inc/json_b.asm), macro con note, errore della riga di comando,
+              nessun messaggio, -w.
   ref/        fonti indipendenti per i cicli:
                 nmos_cycles_cd65.txt  tutti i 256 opcode NMOS, estratti dalla
                                       tabella di cd65 (illegali verificati
@@ -47,7 +51,9 @@ CARTELLE
               System Specification 2.3.7.5 (tools/check_cycles.py).
   expected/   gli attesi: <nome>.bin (binario senza indirizzo iniziale),
               <nome>.lst (listing dalla riga ";Offset" in poi: le righe
-              prima contengono comando e data) e <nome>.err (messaggi).
+              prima contengono comando e data), <nome>.err (messaggi) e
+              <nome>.json (messaggi in JSON, con la versione sostituita da
+              "*" perche' cambia a ogni rilascio).
   tools/check_opcodes.py   controlla le annotazioni ;@ contro il listing.
   tools/cycles_dump.c      stampa la tabella dei cicli di una CPU.
   tools/check_cycles.py    confronta quella tabella con test/ref e con le
@@ -58,6 +64,9 @@ INTESTAZIONE DI UN SORGENTE (righe facoltative)
   ;; cpu: --m4510         CPU (predefinita --m65xx)
   ;; flags: -B            altre opzioni
   ;; expect: error        il test deve fallire (si confronta solo .err)
+  ;; json: yes            aggiunge --error-json: il file deve essere JSON
+                          valido (python3) e uguale a expected/<nome>.json
+                          (anche con expect: error)
   Opzioni sempre usate: -q -b -o <bin> -L <lst> -E <err>.
 
 ANNOTAZIONI ;@
@@ -93,4 +102,7 @@ NOTE
     perche' 64tass ha il formato classico.
   - tools/check_opcodes.py legge le colonne dalla riga ";Offset ...":
     funziona con tutti e due i formati.
-  - Rapporti: roadMap/fase0_rapporto.txt, roadMap/fase1_rapporto.txt.
+  - Il 64tass originale non conosce --error-json: con --asm i test di
+    json/ falliscono.
+  - Rapporti: roadMap/fase0_rapporto.txt, roadMap/fase1_rapporto.txt,
+    roadMap/fase2_rapporto.txt.

@@ -1,0 +1,5 @@
+{"program":"65tass","version":"*","format":1,"diagnostics":[
+{"severity":"warning","name":"-Wshadow","message":"shadow definition 'uno'","file":"src/json/warnings.asm","line":9,"column":1,"source":"uno     = 2","included_from":[],"notes":[{"severity":"note","name":null,"message":"original definition of 'uno' was here","file":"src/json/warnings.asm","line":7,"column":1,"source":"uno     = 1","included_from":[]}]},
+{"severity":"warning","name":"-Wleading-zeros","message":"leading zeros ignored","file":"src/json/warnings.asm","line":12,"column":13,"source":"        lda 0001","included_from":[],"notes":[]},
+{"severity":"warning","name":null,"message":"avviso dell'utente","file":"src/json/warnings.asm","line":13,"column":9,"source":"        .warn \"avviso dell'utente\"","included_from":[],"notes":[]}
+],"errors":0,"warnings":3}

@@ -1,0 +1,10 @@
+src/json/macro.asm:10:17: error: not defined symbol 'argomento_sbagliato'
+         #carica argomento_sbagliato
+                 ^
+In file included from src/json/macro.asm:10:9:
+src/json/macro.asm:8:14: note: original location in an expanded macro was here
+         lda #argomento_sbagliato
+              ^
+src/json/macro.asm:10:9: note: searched in this scope and in all it's parents
+         #carica argomento_sbagliato
+         ^

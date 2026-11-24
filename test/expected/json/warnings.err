@@ -1,0 +1,12 @@
+src/json/warnings.asm:9:1: warning: shadow definition 'uno' [-Wshadow]
+ uno     = 2
+ ^
+src/json/warnings.asm:7:1: note: original definition of 'uno' was here
+ uno     = 1
+ ^
+src/json/warnings.asm:12:13: warning: leading zeros ignored [-Wleading-zeros]
+         lda 0001
+             ^
+src/json/warnings.asm:13:9: warning: avviso dell'utente
+         .warn "avviso dell'utente"
+         ^

@@ -4762,6 +4762,53 @@ using <q><code>-</code></q> as the file name.</p></dd>
 <dt><b>--no-error</b><a name="o_no_error" href="#o_no_error"></a>
 <dd>Do not output any error messages, just count them.</dd>
 
+<dt><b>--error-json</b>=&lt;file&gt;<a name="o_error-json" href="#o_error-json"></a>
+<dd>65tass only. Write the diagnostic messages in JSON format to &lt;file&gt; as well
+(use <q><code>-</code></q> for the standard output).
+
+<p>The text messages are not changed: they still go to the standard error output or
+to the <q><a href="#o_error"><code>--error</code></a></q> file. The JSON file holds exactly
+the same messages (also with <q><a href="#o_no_error"><code>--no-error</code></a></q>, which
+only silences the text), for editors, language servers and continuous integration.</p>
+
+<pre>
+65tass --error-json=errors.json a.asm
+</pre>
+
+<p>The file is one JSON object, with one diagnostic per line:</p>
+
+<pre>
+{"program":"65tass","version":"1.60.3243+","format":1,"diagnostics":[
+{"severity":"warning","name":"-Wleading-zeros","message":"leading zeros ignored","file":"a.asm","line":12,"column":13,"source":"        lda 0001","included_from":[],"notes":[]}
+],"errors":0,"warnings":1}
+</pre>
+
+<p>Fields of a diagnostic:</p>
+<dl>
+<dt><code>severity</code><dd><q>error</q>, <q>warning</q> or <q>fatal</q>; <q>note</q> inside notes</dd>
+<dt><code>name</code><dd>name of the diagnostic option, like <q>-Wshadow</q> (the <q> [-Wshadow]</q> at the end of the text message), or null when the message has none (most errors, <code>.warn</code>, <code>.error</code>)</dd>
+<dt><code>message</code><dd>the text of the message without the name</dd>
+<dt><code>file</code><dd>file name as in the text message, <q>&lt;command line&gt;</q> for command line arguments, or null when there's no position</dd>
+<dt><code>line</code>, <code>column</code><dd>1 based; the column counts characters (not bytes, a tab is one) like the text message. null without a position.</dd>
+<dt><code>source</code><dd>the source line (for macros the expanded line), or null</dd>
+<dt><code>included_from</code><dd>the include chain, nearest first: list of objects with file, line and column. A macro expansion counts as an inclusion, like <q>In file included from</q> in the text.</dd>
+<dt><code>notes</code><dd>the notes which belong to this message (same fields, without <code>notes</code>)</dd>
+</dl>
+
+<p><code>errors</code> and <code>warnings</code> count the diagnostics in the list. Like in the
+text output warnings are left out when there are errors, and also with
+<q><a href="#o_no-warn"><code>--no-warn</code></a></q>. Strings are UTF-8 with JSON escapes.
+<code>format</code> changes only if a field changes its meaning.</p>
+
+<p>When the file can't be written it's a fatal error and the exit status is not 0.
+The file is listed as a target with <q><code>--dependencies</code></q>.</p></dd>
+
+<dt><b>--error-json-append</b>=&lt;file&gt;<a name="o_error-json-append" href="#o_error-json-append"></a>
+<dd>Same as the <q><a href="#o_error-json"><code>--error-json</code></a></q> option but appends instead of overwrites. Every run adds one more JSON object.</dd>
+
+<dt><b>--no-error-json</b><a name="o_no-error-json" href="#o_no-error-json"></a>
+<dd>Do not write the JSON file (cancels an earlier <q><a href="#o_error-json"><code>--error-json</code></a></q>).</dd>
+
 <dt><b>-w</b>, <b>--no-warn</b><a name="o_no-warn" href="#o_no-warn"></a>
 <dd>Suppress warnings.
 

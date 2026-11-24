@@ -6418,7 +6418,7 @@ int main2(int *argc2, char **argv2[]) {
 
     if (arguments.quiet) {
         puts("65tass Turbo Assembler Macro V" VERSION "\n"
-             "64TASS comes with ABSOLUTELY NO WARRANTY; This is free software, and you\n"
+             "65TASS comes with ABSOLUTELY NO WARRANTY; This is free software, and you\n"
              "are welcome to redistribute it under certain conditions; See LICENSE!\n");
         fflush(stdout);
     }
@@ -6498,7 +6498,7 @@ int main2(int *argc2, char **argv2[]) {
         failed = error_serious();
     }
 
-    error_print(&arguments.error);
+    if (error_print(&arguments.error)) failed = true; /* 65tass: JSON file not written */
     if (arguments.quiet) {
         error_status();
         printf("Passes:            %u\n", pass);

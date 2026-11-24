@@ -977,6 +977,7 @@ void makefile(int argc, char *argv[]) {
         wrap_print_nodash(&m, arguments.output[j].mapname);
     }
     wrap_print_nodash(&m, arguments.error.name);
+    wrap_print_nodash(&m, arguments.error.json);
     if (m.len != 0) {
         m.len++;
         putc(':', m.f);

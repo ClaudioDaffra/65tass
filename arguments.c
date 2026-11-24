@@ -75,7 +75,10 @@ static const struct arguments_s arguments_default = {
         COLOR_AUTO, /* color */
         true,    /* warning */
         false,   /* no_output */
-        false    /* append */
+        false,   /* append */
+        {0,0,0}, /* json_pos */
+        NULL,    /* json */
+        false    /* json_append */
     },
     {0,0,0},     /* tab_size_pos */
     8,           /* tab_size */
@@ -375,7 +378,7 @@ enum {
     MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND, C256_PGX, C256_PGZ,
     OUTPUT_EXEC, M45GS02, CTAGS_LABELS, CODY_BIN, WDC_BIN, OUTPUT_RECORD_SIZE,
     COLOR_DIAG, AUTO_COLOR_DIAG, NO_COLOR_DIAG, MNONE, LIST_CYCLES, NO_LIST_CYCLES,
-    LIST_CLASSIC, NO_LIST_CLASSIC
+    LIST_CLASSIC, NO_LIST_CLASSIC, ERROR_JSON, ERROR_JSON_APPEND, NO_ERROR_JSON
 };
 
 static const struct my_option long_options[] = {
@@ -432,6 +435,9 @@ static const struct my_option long_options[] = {
     {"error"            , my_required_argument, NULL, 'E'},
     {"no-error"         , my_no_argument      , NULL,  NO_ERROR},
     {"error-append"     , my_required_argument, NULL,  ERROR_APPEND},
+    {"error-json"       , my_required_argument, NULL,  ERROR_JSON},
+    {"error-json-append", my_required_argument, NULL,  ERROR_JSON_APPEND},
+    {"no-error-json"    , my_no_argument      , NULL,  NO_ERROR_JSON},
     {"normal-labels"    , my_no_argument      , NULL,  NORMAL_LABELS},
     {"export-labels"    , my_no_argument      , NULL,  EXPORT_LABELS},
     {"vice-labels"      , my_no_argument      , NULL,  VICE_LABELS},
@@ -539,6 +545,7 @@ static address_t check_outputs(void) {
     }
     if (arguments.list.name != NULL && dash_name(arguments.list.name)) tostdout = true;
     if (arguments.make.name != NULL && dash_name(arguments.make.name)) tostdout = true;
+    if (arguments.error.json != NULL && dash_name(arguments.error.json)) tostdout = true;
     if (!tostdout) {
         for (i = 0; i < arguments.symbol_output_len; i++) {
             struct symbol_output_s *symbol_output = &arguments.symbol_output[i];
@@ -743,6 +750,9 @@ int init_arguments(int *argc2, char **argv2[]) {
             case NO_ERROR: arguments.error.name = NULL; arguments.error.name_pos.start = 0; arguments.error.name_pos.line = 0; arguments.error.name_pos.pos = 0; arguments.error.no_output = true; arguments.error.append = false; break;
             case ERROR_APPEND:
             case 'E': arguments.error.name = my_optarg; get_arg(&get_args, &arguments.error.name_pos); arguments.error.no_output = false; arguments.error.append = (opt == ERROR_APPEND); break;
+            case NO_ERROR_JSON: arguments.error.json = NULL; arguments.error.json_pos.start = 0; arguments.error.json_pos.line = 0; arguments.error.json_pos.pos = 0; arguments.error.json_append = false; break;
+            case ERROR_JSON_APPEND:
+            case ERROR_JSON: arguments.error.json = my_optarg; get_arg(&get_args, &arguments.error.json_pos); arguments.error.json_append = (opt == ERROR_JSON_APPEND); break;
             case LIST_APPEND:
             case 'L': arguments.list.name = my_optarg; get_arg(&get_args, &arguments.list.name_pos); arguments.list.append = (opt == LIST_APPEND); break;
             case MAKE_APPEND:
@@ -786,7 +796,9 @@ int init_arguments(int *argc2, char **argv2[]) {
                "        [--output=<file>] [--output-append=<file>] [--output-exec=<expr>]\n"
                "        [--output-record-size=<value>] [--no-output] [--map=<file>]\n"
                "        [--map-append=<file>] [--no-map] [--error=<file>]\n"
-               "        [--error-append=<file>] [--quiet] [--no-warn] [--no-caret-diag]\n"
+               "        [--error-append=<file>] [--error-json=<file>]\n"
+               "        [--error-json-append=<file>] [--no-error-json]\n"
+               "        [--quiet] [--no-warn] [--no-caret-diag]\n"
                "        [--macro-caret-diag] [--no-color-diag] [--color-diag] [--help]\n"
                "        [--usage] [--version] SOURCES\n");
                    return 0;
@@ -805,6 +817,9 @@ int init_arguments(int *argc2, char **argv2[]) {
                "  -E, --error=<file>     Place errors into <file>\n"
                "      --error-append=<f> Append errors to <file>\n"
                "      --no-error         Do not output any errors\n"
+               "      --error-json=<f>   Errors also in JSON to <file>\n"
+               "      --error-json-append=<f> Append JSON errors to <file>\n"
+               "      --no-error-json    Do not write JSON errors\n"
                "  -I <path>              Include search path\n"
                "  -M, --dependencies=<f> Makefile dependencies to <file>\n"
                "      --dependencies-append=<f> Append dependencies to <file>\n"

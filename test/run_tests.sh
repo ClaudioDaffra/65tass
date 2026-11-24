@@ -11,8 +11,11 @@
 #   ;; cpu: <opzione>       per esempio --m4510 (predefinito --m65xx)
 #   ;; flags: <opzioni>     altre opzioni da riga di comando
 #   ;; expect: error        il test deve fallire con gli errori attesi
+#   ;; json: yes            anche --error-json (Fase 2): il file deve essere
+#                           JSON valido e uguale all'atteso (.json)
 # Si confrontano: binario (.bin), listing senza intestazione (.lst),
-# messaggi (.err) e le annotazioni ';@' (tools/check_opcodes.py).
+# messaggi (.err), messaggi JSON (.json) e le annotazioni ';@'
+# (tools/check_opcodes.py).
 # Con l'assemblatore del progetto c'e' anche il test "cicli/riferimenti":
 # la tabella dei cicli (cycles.c) contro le fonti indipendenti di test/ref
 # (tools/cycles_dump.c, tools/check_cycles.py).
@@ -28,7 +31,7 @@ while [ $# -gt 0 ]; do
     --update) UPDATE=1 ;;
     --keep) KEEP=1 ;;
     --asm) shift; ASM=$1 ;;
-    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) FILTER=$1 ;;
     esac
     shift
@@ -53,10 +56,13 @@ for src in src/*/*.asm; do
     cpu=$(sed -n 's/^;; cpu: *//p' "$src" | head -1)
     flags=$(sed -n 's/^;; flags: *//p' "$src" | head -1)
     expect=$(sed -n 's/^;; expect: *//p' "$src" | head -1)
+    json=$(sed -n 's/^;; json: *//p' "$src" | head -1)
     mkdir -p "$OUT/$(dirname "$name")" "expected/$(dirname "$name")"
     o=$OUT/$name
+    jflags=
+    [ "$json" = yes ] && jflags="--error-json=$o.json"
     # shellcheck disable=SC2086
-    "$ASM" ${cpu:---m65xx} $flags -q -b -o "$o.bin" -L "$o.lst" -E "$o.err" "$src"
+    "$ASM" ${cpu:---m65xx} $flags -q -b -o "$o.bin" -L "$o.lst" -E "$o.err" $jflags "$src"
     rc=$?
     [ -f "$o.lst" ] && sed -n '/^;Offset/,$p' "$o.lst" > "$o.lstn"
     problems=
@@ -70,9 +76,19 @@ for src in src/*/*.asm; do
         # listing: si confrontano binario e messaggi
         [ "$ASM" = "$ROOT/65tass" ] || files="bin err"
     fi
+    if [ "$json" = yes ]; then
+        files="$files json"
+        # la versione cambia: nel confronto diventa "*"
+        [ -f "$o.json" ] && sed 's/^\({"program":"65tass","version":\)"[^"]*"/\1"*"/' "$o.json" > "$o.jsonn"
+        if ! python3 -I -c 'import json,sys; json.load(open(sys.argv[1], encoding="utf-8"))' "$o.json" 2> "$o.jsonchk"; then
+            problems="$problems [JSON non valido]"
+            tail -1 "$o.jsonchk" | sed 's/^/      /'
+        fi
+    fi
     for ext in $files; do
         got=$o.$ext
         [ "$ext" = lst ] && got=$o.lstn
+        [ "$ext" = json ] && got=$o.jsonn
         want=expected/$name.$ext
         if [ $UPDATE -eq 1 ]; then
             [ -f "$got" ] && cp "$got" "$want"

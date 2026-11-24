@@ -1,0 +1,3 @@
+{"program":"65tass","version":"*","format":1,"diagnostics":[
+{"severity":"error","name":null,"message":"not defined symbol 'argomento_sbagliato'","file":"src/json/macro.asm","line":10,"column":17,"source":"        #carica argomento_sbagliato","included_from":[],"notes":[{"severity":"note","name":null,"message":"original location in an expanded macro was here","file":"src/json/macro.asm","line":8,"column":14,"source":"        lda #argomento_sbagliato","included_from":[{"file":"src/json/macro.asm","line":10,"column":9}]},{"severity":"note","name":null,"message":"searched in this scope and in all it's parents","file":"src/json/macro.asm","line":10,"column":9,"source":"        #carica argomento_sbagliato","included_from":[]}]}
+],"errors":1,"warnings":0}

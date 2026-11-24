@@ -1,4 +1,16 @@
 
+65tass 2026-11-24 (road map phase 2)
+====================================
+
+new	--error-json=<file>, --error-json-append=<file>, --no-error-json:
+	the diagnostics in JSON as well (severity, name, message, file,
+	line, column, source, included_from, notes), "-" for stdout. Same
+	messages as the text output, which does not change. The name is
+	the " [-W...]" of the message (null if none). A JSON file that
+	can't be written is a fatal error with exit status 1.
+add	test/src/json: 8 tests; run_tests.sh ";; json: yes" checks that the
+	file is valid JSON and equal to the expected .json
+
 65tass 2026-11-18 (road map phase 1)
 ====================================
 

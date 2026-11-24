@@ -1,0 +1,3 @@
+src/json/inc/json_b.asm:2:14: error: not defined symbol 'non_definito_b'
+         lda #non_definito_b
+              ^

@@ -1,0 +1,3 @@
+{"program":"65tass","version":"*","format":1,"diagnostics":[
+{"severity":"error","name":"-Wleading-zeros","message":"leading zeros ignored","file":"src/json/werror.asm","line":7,"column":13,"source":"        lda 0001","included_from":[],"notes":[]}
+],"errors":1,"warnings":0}

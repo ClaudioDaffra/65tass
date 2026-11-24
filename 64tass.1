@@ -184,6 +184,18 @@ Append to error file instead of overwriting it.
 \fB\-\-no\-error\fR
 Do not output any errors, just count them.
 .TP 0.5i
+\fB\-\-error\-json\fR=\fIfile\fR
+Write the diagnostics in JSON format to \fIfile\fR as well (\(aq-\(aq for the
+standard output); the text messages do not change. Each diagnostic has
+severity, name (like \(aq-Wshadow\(aq or null), message, file, line, column,
+source, included_from and notes. A file that can't be written is a fatal error.
+.TP 0.5i
+\fB\-\-error\-json\-append\fR=\fIfile\fR
+Append to the JSON file instead of overwriting it.
+.TP 0.5i
+\fB\-\-no\-error\-json\fR
+Do not write the JSON file.
+.TP 0.5i
 \fB\-w\fR, \fB\-\-no\-warn\fR
 Suppress warnings. Disables warnings during compile. Finer grained warning control is available by using the -W options.
 .TP 0.5i

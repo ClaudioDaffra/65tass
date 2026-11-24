@@ -1,0 +1,9 @@
+src/json/errors.asm:9:14: error: not defined symbol 'non_definito'
+         lda #non_definito
+              ^
+src/json/errors.asm:10:18: error: ')' expected
+         lda #($12
+                  ^
+src/json/errors.asm:11:2: error: tab	"q" \ è €
+ 	.cerror 1, "tab	""q"" \ è €"
+ 	^

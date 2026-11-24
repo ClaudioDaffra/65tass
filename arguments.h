@@ -73,6 +73,9 @@ struct error_output_s {
     bool warning;
     bool no_output;
     bool append;
+    struct argpos_s json_pos;   /* 65tass: --error-json */
+    const char *json;
+    bool json_append;
 };
 
 struct symbol_output_s {

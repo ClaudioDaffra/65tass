@@ -4083,6 +4083,57 @@ default, the others are disabled.
     Same as the `--error' option but appends instead of overwrites.
 --no-error
     Do not output any error messages, just count them.
+--error-json=<file>
+    65tass only. Write the diagnostic messages in JSON format to <file> as
+    well (use `-' for the standard output).
+
+    The text messages are not changed: they still go to the standard error
+    output or to the `--error' file. The JSON file holds exactly the same
+    messages (also with `--no-error', which only silences the text), for
+    editors, language servers and continuous integration.
+
+    65tass --error-json=errors.json a.asm
+
+    The file is one JSON object, with one diagnostic per line:
+
+    {"program":"65tass","version":"1.60.3243+","format":1,"diagnostics":[
+    {"severity":"warning","name":"-Wleading-zeros","message":"leading zeros
+     ignored","file":"a.asm","line":12,"column":13,"source":"        lda 0001",
+     "included_from":[],"notes":[]}
+    ],"errors":0,"warnings":1}
+
+    (the diagnostic line is split here only to fit the page)
+
+    Fields of a diagnostic:
+
+    severity        "error", "warning" or "fatal"; "note" inside notes
+    name            name of the diagnostic option, like "-Wshadow" (the
+                    " [-Wshadow]" at the end of the text message), or null
+                    when the message has none (most errors, .warn, .error)
+    message         the text of the message without the name
+    file            file name as in the text message, "<command line>" for
+                    command line arguments, or null when there's no position
+    line, column    1 based; the column counts characters (not bytes, a tab
+                    is one) like the text message. null without a position.
+    source          the source line (for macros the expanded line), or null
+    included_from   the include chain, nearest first: list of objects with
+                    file, line and column. A macro expansion counts as an
+                    inclusion, like "In file included from" in the text.
+    notes           the notes which belong to this message (same fields,
+                    without "notes")
+
+    "errors" and "warnings" count the diagnostics in the list. Like in the
+    text output warnings are left out when there are errors, and also with
+    `--no-warn'. Strings are UTF-8 with JSON escapes. "format" changes only
+    if a field changes its meaning.
+
+    When the file can't be written it's a fatal error and the exit status
+    is not 0. The file is listed as a target with `--dependencies'.
+--error-json-append=<file>
+    Same as `--error-json' but appends instead of overwrites. Every run adds
+    one more JSON object.
+--no-error-json
+    Do not write the JSON file (cancels an earlier `--error-json').
 -w, --no-warn
     Suppress warnings.
 

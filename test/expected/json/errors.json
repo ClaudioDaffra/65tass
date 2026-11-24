@@ -1,0 +1,5 @@
+{"program":"65tass","version":"*","format":1,"diagnostics":[
+{"severity":"error","name":null,"message":"not defined symbol 'non_definito'","file":"src/json/errors.asm","line":9,"column":14,"source":"        lda #non_definito","included_from":[],"notes":[]},
+{"severity":"error","name":null,"message":"')' expected","file":"src/json/errors.asm","line":10,"column":18,"source":"        lda #($12","included_from":[],"notes":[]},
+{"severity":"error","name":null,"message":"tab\t\"q\" \\ è €","file":"src/json/errors.asm","line":11,"column":2,"source":"\t.cerror 1, \"tab\t\"\"q\"\" \\ è €\"","included_from":[],"notes":[]}
+],"errors":3,"warnings":0}

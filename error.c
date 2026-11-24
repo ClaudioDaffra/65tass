@@ -40,6 +40,7 @@
 #include "symbolobj.h"
 #include "anonsymbolobj.h"
 #include "console.h"
+#include "version.h"
 
 struct file_list_s *current_file_list;
 struct file_list_s *commandline_file_list;
@@ -1599,11 +1600,172 @@ static void err_color(void) {
     console_color(arguments.error.color == COLOR_ALWAYS, arguments.error.color == COLOR_NEVER);
 }
 
-void error_print(const struct error_output_s *output) {
+/* 65tass: diagnostics in JSON (--error-json), road map phase 2.
+   The same messages as the text output, one object per line:
+   {"program":"65tass","version":"...","format":1,"diagnostics":[
+   {"severity":"error","name":null,"message":"...","file":"a.asm","line":3,
+    "column":9,"source":"...","included_from":[...],"notes":[...]},
+   ...
+   ],"errors":1,"warnings":0} */
+static void json_string2(FILE *f, const uint8_t *s, size_t len) {
+    size_t i = 0;
+    putc('"', f);
+    while (i < len) {
+        uint8_t c = s[i];
+        if (c >= 0x80) {
+            unichar_t ch;
+            unsigned int ln = utf8len(c);
+            if (c < 0xc0 || ln > len - i) {
+                fputs("\\ufffd", f);
+                i++;
+                continue;
+            }
+            utf8in(s + i, &ch);
+            if (ch > 0x10ffff || (ch >= 0xd800 && ch < 0xe000)) fputs("\\ufffd", f);
+            else fwrite(s + i, 1, ln, f);
+            i += ln;
+            continue;
+        }
+        switch (c) {
+        case '"': fputs("\\\"", f); break;
+        case '\\': fputs("\\\\", f); break;
+        case '\n': fputs("\\n", f); break;
+        case '\r': fputs("\\r", f); break;
+        case '\t': fputs("\\t", f); break;
+        default:
+            if (c < 0x20 || c == 0x7f) fprintf(f, "\\u%04x", c);
+            else putc(c, f);
+        }
+        i++;
+    }
+    putc('"', f);
+}
+
+static void json_string(FILE *f, const char *s) {
+    json_string2(f, (const uint8_t *)s, strlen(s));
+}
+
+static void json_location(FILE *f, const struct file_list_s *cflist, linepos_t epoint, const uint8_t *line) {
+    const struct file_s *file;
+    if (cflist == &file_list.flist) {
+        fputs("\"file\":null,\"line\":null,\"column\":null", f);
+        return;
+    }
+    file = cflist->file;
+    fputs("\"file\":", f);
+    json_string(f, file->name);
+    if (epoint->line == 0) {
+        fputs(",\"line\":null,\"column\":null", f);
+        return;
+    }
+    if (line == NULL) line = &file->source.data[file->line[epoint->line - 1]];
+    fprintf(f, ",\"line\":%" PRIuline ",\"column\":%" PRIlinepos, epoint->line, ((file->encoding == E_UTF8) ? (linecpos_t)calcpos(line, epoint->pos) : epoint->pos) + 1);
+}
+
+static void json_diagnostic(FILE *f, const struct errorentry_s *err) {
+    const struct file_list_s *cflist = err->file_list;
+    const uint8_t *msg = ((const uint8_t *)(err + 1)) + err->line_len;
+    const uint8_t *line = NULL;
+    size_t len = err->error_len, name = 0, i;
+    const struct file_listnode_s *l;
+    bool first;
+
+    /* the name of the diagnostic is the " [-W...]" at the end */
+    if (len > 5 && msg[len - 1] == ']') {
+        for (i = len - 1; i >= 4; i--) {
+            if (msg[i - 1] == ' ' || msg[i - 1] == '[') break;
+        }
+        if (i >= 4 && memcmp(msg + i - 2, " [-W", 4) == 0 && i + 2 < len) name = i;
+    }
+
+    fputs("{\"severity\":", f);
+    switch (err->severity) {
+    case SV_NOTE: fputs("\"note\"", f); break;
+    case SV_WARNING: fputs("\"warning\"", f); break;
+    case SV_FATAL: fputs("\"fatal\"", f); break;
+    default: fputs("\"error\"", f); break;
+    }
+    fputs(",\"name\":", f);
+    if (name != 0) {
+        json_string2(f, msg + name, len - name - 1);
+        len = name - 2;
+    } else fputs("null", f);
+    fputs(",\"message\":", f);
+    json_string2(f, msg, len);
+    putc(',', f);
+    if (cflist != &file_list.flist && err->epoint.line != 0) {
+        line = (err->line_len != 0) ? (const uint8_t *)(err + 1) : &cflist->file->source.data[cflist->file->line[err->epoint.line - 1]];
+    }
+    json_location(f, cflist, &err->epoint, line);
+    fputs(",\"source\":", f);
+    if (line != NULL) json_string(f, (const char *)line); else fputs("null", f);
+    fputs(",\"included_from\":[", f);
+    first = true;
+    if (cflist != &file_list.flist) {
+        for (l = (const struct file_listnode_s *)cflist; l->parent != NULL && l->parent != &file_list; l = l->parent) {
+            if (!first) putc(',', f);
+            first = false;
+            putc('{', f);
+            json_location(f, &l->parent->flist, &l->flist.epoint, NULL);
+            putc('}', f);
+        }
+    }
+    putc(']', f);
+}
+
+static void error_print_json(FILE *f, size_t end, const struct error_output_s *output, bool anyerr, bool noneerr) {
+    const struct errorentry_s *err;
+    size_t pos;
+    bool usenote = false, open = false, firstnote = true;
+    unsigned int jerrors = 0, jwarnings = 0;
+
+    fputs("{\"program\":\"65tass\",\"version\":", f);
+    json_string(f, VERSION);
+    fputs(",\"format\":1,\"diagnostics\":[", f);
+    for (pos = 0; pos < end; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
+        err = (const struct errorentry_s *)&error_list.data[pos];
+        switch (err->severity) {
+        case SV_NOTE:
+            if (!usenote) continue;
+            if (!firstnote) putc(',', f);
+            firstnote = false;
+            json_diagnostic(f, err);
+            putc('}', f);
+            continue;
+        case SV_WARNING:
+            if (!output->warning || anyerr) {
+                usenote = false;
+                continue;
+            }
+            jwarnings++;
+            break;
+        case SV_NONEERROR:
+            if (noneerr) {
+                usenote = false;
+                continue;
+            }
+            FALL_THROUGH; /* fall through */
+        default:
+            jerrors++;
+            break;
+        }
+        fputs(open ? "]},\n" : "\n", f);
+        json_diagnostic(f, err);
+        fputs(",\"notes\":[", f);
+        open = true;
+        firstnote = true;
+        usenote = true;
+    }
+    if (open) fputs("]}", f);
+    fprintf(f, "\n],\"errors\":%u,\"warnings\":%u}\n", jerrors, jwarnings);
+}
+
+/* returns true if the JSON file (--error-json) could not be written */
+bool error_print(const struct error_output_s *output) {
     const struct errorentry_s *err, *err2, *err3;
     size_t pos, end;
-    bool noneerr = false, anyerr = false, usenote;
-    FILE *ferr;
+    bool noneerr = false, anyerr = false, usenote, jsonfail = false;
+    FILE *ferr, *fjson = NULL;
 
     if (error_list.header_pos != 0) {
         avltree_destroy(&file_list.members, walkfilelist);
@@ -1616,6 +1778,14 @@ void error_print(const struct error_output_s *output) {
             ferr = stderr;
         }
     } else ferr = output->no_output ? NULL : stderr;
+
+    if (output->json != NULL) {
+        fjson = dash_name(output->json) ? stdout : fopen_utf8(output->json, output->json_append ? "at" : "wt");
+        if (fjson == NULL) {
+            err_msg_file2(ERROR_CANT_WRTE_ERR, output->json, &output->json_pos);
+            jsonfail = true;
+        }
+    }
 
     warnings = errors = 0;
     close_error();
@@ -1683,11 +1853,27 @@ void error_print(const struct error_output_s *output) {
         err2 = err;
         usenote = true;
     }
-    if (ferr == NULL) return;
-    if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
-    if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
-    if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
-    console_use(NULL);
+    if (ferr != NULL) {
+        if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
+        if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
+        if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
+        console_use(NULL);
+    }
+    if (fjson != NULL) {
+        clearerr(fjson);
+        error_print_json(fjson, end, output, anyerr, noneerr);
+        if (ferror(fjson) != 0) jsonfail = true;
+        if (fjson != stdout) {
+            if (fclose(fjson) != 0) jsonfail = true;
+        } else if (fflush(fjson) != 0) jsonfail = true;
+        if (jsonfail) {
+            fatal_error("can't write error file '");
+            fputs(output->json, stderr);
+            fputs("'", stderr);
+            fatal_error(NULL);
+        }
+    }
+    return jsonfail;
 }
 
 void error_reset(void) {
