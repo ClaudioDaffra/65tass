@@ -1,4 +1,21 @@
 
+65tass 2026-11-25 (road map phase 3)
+====================================
+
+new	--source-map=<file>: source map, one record per processed source
+	line that produces bytes: CPU address, offset, length, file:line and
+	the callers (m macro/structure/function call, i .include/.binclude)
+	up to the main source. .virtual and structure definitions are left
+	out. Written in the final pass (like the listing), not if there are
+	errors. New sourcemap.c.
+new	--source-map-vice=<file>: the same records as VICE monitor labels
+	("al 1000 .main_11", "_2"... for repeated lines);
+	--no-source-map, --no-source-map-vice
+new	"can't write source map file" fatal error
+add	test/src/smap: 4 tests (nested macros, includes on three levels,
+	.logical/sections/.virtual, 65816); tools/check_srcmap.py checks
+	every record against the listing and the source lines
+
 65tass 2026-11-24 (road map phase 2)
 ====================================
 

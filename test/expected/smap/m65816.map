@@ -1,0 +1,9 @@
+; 65tass source map, format 1
+; F <number> <file name>
+; <address> <offset> <length> <file>:<line> [<m|i><file>:<line> ...]
+F 1 src/smap/m65816.asm
+18000 18000 2 1:9
+18002 18002 3 1:10
+18005 18005 3 1:11
+18008 18008 4 1:12
+28000 28000 1 1:14

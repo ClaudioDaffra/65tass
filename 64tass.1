@@ -491,6 +491,19 @@ effect on the source code on the right hand side.
 Normally the assembler tries to minimize listing output by omitting
 \(aqunimportant\(aq lines. But sometimes it's better to just list everything
 including comments and empty lines.
+.TP 0.5i
+\fB\-\-source\-map\fR=\fIfile\fR
+Write a source map: one record per source line which produces bytes, with
+CPU address, offset, length, file and line, and the macro (m) and include (i)
+callers up to the main source file. .virtual blocks and structure
+definitions are left out.
+.TP 0.5i
+\fB\-\-source\-map\-vice\fR=\fIfile\fR
+The same records as VICE monitor labels named after file and line
+(\(aqal 1000 .a_11\(aq).
+.TP 0.5i
+\fB\-\-no\-source\-map\fR, \fB\-\-no\-source\-map\-vice\fR
+Do not write the source map files.
 .SS Other options
 .TP 0.5i
 \fB\-?\fR, \fB\-\-help\fR

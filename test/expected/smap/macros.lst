@@ -1,0 +1,28 @@
+;Offset  ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/smap/macros.asm
+
+
+;******  Processing file: src/smap/inc/smap_macro.asm
+
+
+;******  Return to file: src/smap/macros.asm
+
+.1000    a2 00                    ldx #$00                  ldx #0
+.1002    a9 05                    lda #$05                  lda #5
+.1004    e8                       inx                       inx                             ; $1004: 1:10 m1:14 m1:18 m1:23
+.1005    a9 06                    lda #$06                  lda #5+1
+.1007    e8                       inx                       inx                             ; $1004: 1:10 m1:14 m1:18 m1:23
+.1008    8d 20 d0                 sta $d020                 sta $d020
+.100b    88                       dey                       dey
+.100c    88                       dey                       dey
+.100d    88                       dey                       dey
+.100e    a9 02                    lda #$02                  lda #2
+.1010    8d 21 d0                 sta $d021                 sta $d021
+>0000    09                                         x       .byte 9                         ;nomap
+>0001    34 12                                      y       .word $1234                     ;nomap
+>1013    09                                         x       .byte 9                         ;nomap
+>1014    34 12                                      y       .word $1234                     ;nomap
+.1016    60                       rts                       rts
+
+;******  End of listing

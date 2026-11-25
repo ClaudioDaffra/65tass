@@ -391,6 +391,22 @@ Partire da quello che esiste: --ctags-labels e --line-numbers.
 Formato leggibile da debugger e strumenti esterni (e da VICE tramite le etichette).
 Prove: macro annidate e include su più livelli.
 
+STATO (2026-11-25): FATTA. Rapporto in roadMap/fase3_rapporto.txt.
+- Opzioni: --source-map=<file> (formato testo documentato) e
+  --source-map-vice=<file> (etichette VICE per riga: "al 1000 .main_11"),
+  --no-source-map, --no-source-map-vice. Spente di default.
+- Un record per ogni riga elaborata che produce byte: indirizzo CPU,
+  offset, lunghezza, file:riga e la catena dei chiamanti fino al sorgente
+  principale (m = macro/struttura/funzione, i = .include/.binclude).
+- Escluse le parti che non vanno nell'output (.virtual, definizioni di
+  .struct, corpi di .function). Scritta nella passata finale, come il
+  listing; binari invariati.
+- Test: test/src/smap, 4 test (macro annidate su tre livelli, include su
+  tre livelli, .logical/sezioni/.virtual, 65816); tools/check_srcmap.py
+  controlla ogni record contro listing e righe sorgente. Suite 61 verdi.
+- Da fare: prova in VICE delle etichette; formato per un debugger (DAP)
+  nella Fase 9.
+
 Fase 4 – Test automatici dell’assemblaggio (priorità altissima)
 
 Test runner esterno: assembla, confronta byte, dimensioni e collocazioni con file attesi.

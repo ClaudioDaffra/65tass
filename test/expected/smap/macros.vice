@@ -1,0 +1,14 @@
+al 1000 .macros_17
+al 1002 .macros_13
+al 1004 .macros_10
+al 1005 .macros_13_2
+al 1007 .macros_10_2
+al 1008 .macros_20
+al 100b .macros_26
+al 100c .macros_26_2
+al 100d .macros_26_3
+al 100e .smap_macro_4
+al 1010 .smap_macro_5
+al 1013 .macros_32
+al 1014 .macros_33
+al 1016 .macros_36

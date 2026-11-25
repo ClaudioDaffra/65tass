@@ -13,6 +13,9 @@
 #   ;; expect: error        il test deve fallire con gli errori attesi
 #   ;; json: yes            anche --error-json (Fase 2): il file deve essere
 #                           JSON valido e uguale all'atteso (.json)
+#   ;; srcmap: yes          anche --source-map e --source-map-vice (Fase 3):
+#                           uguali agli attesi (.map, .vice) e controllati
+#                           contro il listing (tools/check_srcmap.py)
 # Si confrontano: binario (.bin), listing senza intestazione (.lst),
 # messaggi (.err), messaggi JSON (.json) e le annotazioni ';@'
 # (tools/check_opcodes.py).
@@ -31,7 +34,7 @@ while [ $# -gt 0 ]; do
     --update) UPDATE=1 ;;
     --keep) KEEP=1 ;;
     --asm) shift; ASM=$1 ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
     *) FILTER=$1 ;;
     esac
     shift
@@ -59,8 +62,10 @@ for src in src/*/*.asm; do
     json=$(sed -n 's/^;; json: *//p' "$src" | head -1)
     mkdir -p "$OUT/$(dirname "$name")" "expected/$(dirname "$name")"
     o=$OUT/$name
+    srcmap=$(sed -n 's/^;; srcmap: *//p' "$src" | head -1)
     jflags=
     [ "$json" = yes ] && jflags="--error-json=$o.json"
+    [ "$srcmap" = yes ] && jflags="$jflags --source-map=$o.map --source-map-vice=$o.vice"
     # shellcheck disable=SC2086
     "$ASM" ${cpu:---m65xx} $flags -q -b -o "$o.bin" -L "$o.lst" -E "$o.err" $jflags "$src"
     rc=$?
@@ -83,6 +88,14 @@ for src in src/*/*.asm; do
         if ! python3 -I -c 'import json,sys; json.load(open(sys.argv[1], encoding="utf-8"))' "$o.json" 2> "$o.jsonchk"; then
             problems="$problems [JSON non valido]"
             tail -1 "$o.jsonchk" | sed 's/^/      /'
+        fi
+    fi
+    if [ "$srcmap" = yes ]; then
+        files="$files map vice"
+        if [ -f "$o.map" ] && [ -f "$o.lst" ] &&
+           ! python3 -I tools/check_srcmap.py "$o.map" "$o.lst" > "$o.smchk"; then
+            problems="$problems [source map diversa dal listing]"
+            sed 's/^/      /' "$o.smchk" | head -20
         fi
     fi
     for ext in $files; do

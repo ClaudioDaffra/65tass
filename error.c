@@ -56,6 +56,7 @@ struct file_listnode_s {
     struct avltree_node node;
     struct avltree members;
     uint8_t pass;
+    bool macro;      /* 65tass: entered by a macro/function call, not .include */
 };
 
 static struct file_listnode_s file_list;
@@ -304,11 +305,12 @@ const struct file_list_s *parent_file_list(const struct file_list_s *cflist) {
 
 static struct file_listnode_s *lastfl;
 static int file_listsp;
-void enterfile(struct file_s *file, linepos_t epoint) {
+static void enterfile2(struct file_s *file, linepos_t epoint, bool macro) {
     struct avltree_node *b;
     struct file_listnode_s *cflist = (struct file_listnode_s *)current_file_list;
     lastfl->flist.file = file;
     lastfl->flist.epoint = *epoint;
+    lastfl->macro = macro;
     b = avltree_insert(&lastfl->node, &cflist->members, file_list_compare);
     if (b == NULL) {
         lastfl->parent = cflist;
@@ -326,6 +328,27 @@ void enterfile(struct file_s *file, linepos_t epoint) {
     }
     cflist->pass = pass;
     current_file_list = &cflist->flist;
+}
+
+void enterfile(struct file_s *file, linepos_t epoint) {
+    enterfile2(file, epoint, false);
+}
+
+/* 65tass: macro, structure or function body */
+void enterfile_macro(struct file_s *file, linepos_t epoint) {
+    enterfile2(file, epoint, true);
+}
+
+/* 65tass source map: where cflist was entered from. Returns the parent
+   file list, NULL at the top (a source file of the command line). The
+   position in the parent is cflist->epoint, *macro tells if it's a macro
+   call (else an .include). */
+const struct file_list_s *file_list_caller(const struct file_list_s *cflist, bool *macro) {
+    const struct file_listnode_s *l = (const struct file_listnode_s *)cflist;
+    if (cflist == &file_list.flist || l->parent == NULL || l->parent == &file_list) return NULL;
+    if (l->parent->parent == NULL) return NULL;
+    *macro = l->macro;
+    return &l->parent->flist;
 }
 
 void exitfile(void) {
@@ -422,6 +445,7 @@ static const char *const terr_fatal[] = {
     "can't write make file",
     "can't write error file",
     "can't write map file",
+    "can't write source map file",
     "file recursion",
     "macro recursion too deep",
     "function recursion too deep",

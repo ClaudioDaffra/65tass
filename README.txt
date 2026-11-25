@@ -4936,6 +4936,69 @@ Assembly listing
     .1005   60              rts                     rts
 
     ;******  End of listing
+--source-map=<file>
+    65tass only. Write a source map: for every source line which produces
+    bytes, the address, the length and the source file and line, also inside
+    macros and included files. For debuggers and other external tools.
+
+    65tass --source-map=a.map a.asm -o a.prg
+
+    ; 65tass source map, format 1
+    ; F <number> <file name>
+    ; <address> <offset> <length> <file>:<line> [<m|i><file>:<line> ...]
+    F 1 a.asm
+    F 2 inc/io.asm
+    1000 1000 2 1:11
+    1002 1002 2 1:7 m1:12
+    1004 1004 1 1:3 m1:8 m1:12
+    1009 1009 1 2:2 i1:13
+    0400 100f 2 1:21
+
+    Lines starting with `;' are comments. `F' records number the files (the
+    names as in the diagnostic messages). Every other record is:
+
+    address   CPU address of the first byte in hexadecimal, as seen by the
+              labels (in a .logical block the logical address; 24 bits on
+              the 65816)
+    offset    compile offset of the first byte in hexadecimal, as the
+              ;Offset column of the listing
+    length    number of bytes in decimal
+    file:line the line which produced the bytes. In a macro this is the line
+              of the macro body.
+    callers   where it was called from, nearest first, up to the source file
+              on the command line: `m' is a macro, structure or function
+              call (.dstruct too), `i' is an .include or .binclude.
+
+    In the example above $1004 is line 3 (in a macro), called by line 8 (in
+    another macro), called by line 12.
+
+    There's one record for each processed line, in the order of assembly
+    (not sorted by address): a line repeated by .rept or a macro called
+    twice gives more records for the same line. Only bytes which go to the
+    output are listed, so .virtual blocks and structure definitions are
+    left out. Like the listing, the source map needs an additional pass and
+    isn't written if there are errors. A file which can't be written is a
+    fatal error. The file is listed as a target with `--dependencies'.
+--source-map-vice=<file>
+    65tass only. The same records as `--source-map', as a VICE monitor label
+    file: one label per record, named after the file (without directory and
+    extension, other characters than letters, digits and `_' changed to `_')
+    and the line. A line which comes again gets `_2', `_3'...
+
+    65tass --source-map-vice=lines.lbl a.asm -o a.prg
+
+    al 1000 .a_11
+    al 1002 .a_7
+    al 1009 .io_2
+    al 100d .a_15
+    al 100e .a_15_2
+
+    In the VICE monitor load it with `ll "lines.lbl"' (also together with the
+    `--vice-labels' file): the monitor shows these names at the addresses,
+    so the source line of an instruction can be seen while debugging. Macro
+    lines get the name of the macro's file and line.
+--no-source-map, --no-source-map-vice
+    Do not write the source map files (cancels an earlier option).
 
 Floating point conversion tools
 

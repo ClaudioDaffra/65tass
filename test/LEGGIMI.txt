@@ -1,4 +1,4 @@
-65TASS - SUITE DI TEST (Fasi 0, 1 e 2 della road map)
+65TASS - SUITE DI TEST (Fasi 0, 1, 2 e 3 della road map)
 ==================================================
 
 Prova che 65tass produca sempre gli stessi byte, listing e messaggi, e
@@ -41,6 +41,12 @@ CARTELLE
               nome, -Werror=, include su due livelli (inc/json_a.asm,
               inc/json_b.asm), macro con note, errore della riga di comando,
               nessun messaggio, -w.
+  src/smap/   Fase 3, source map (--source-map, --source-map-vice): macro
+              annidate su tre livelli e definite in un file incluso, .rept,
+              .dstruct; include su tre livelli (inc/smap_a.asm,
+              inc/sub/smap_b.asm, inc/sub/smap_c.asm), .binclude, .include
+              dentro una macro; .logical, sezioni, .virtual, dati lunghi;
+              indirizzi a 24 bit del 65816.
   ref/        fonti indipendenti per i cicli:
                 nmos_cycles_cd65.txt  tutti i 256 opcode NMOS, estratti dalla
                                       tabella di cd65 (illegali verificati
@@ -55,6 +61,10 @@ CARTELLE
               <nome>.json (messaggi in JSON, con la versione sostituita da
               "*" perche' cambia a ogni rilascio).
   tools/check_opcodes.py   controlla le annotazioni ;@ contro il listing.
+  tools/check_srcmap.py    controlla una source map contro il listing della
+                           stessa passata: offset, indirizzo (;PC), numero
+                           di byte, testo della riga file:riga (parametri
+                           delle macro liberi) e tipo dei chiamanti (m/i).
   tools/cycles_dump.c      stampa la tabella dei cicli di una CPU.
   tools/check_cycles.py    confronta quella tabella con test/ref e con le
                            regole della C65 System Specification; la suite
@@ -67,6 +77,12 @@ INTESTAZIONE DI UN SORGENTE (righe facoltative)
   ;; json: yes            aggiunge --error-json: il file deve essere JSON
                           valido (python3) e uguale a expected/<nome>.json
                           (anche con expect: error)
+  ;; srcmap: yes          aggiunge --source-map e --source-map-vice: i file
+                          devono essere uguali a expected/<nome>.map e
+                          .vice, e tools/check_srcmap.py controlla la mappa
+                          contro il listing. Nel sorgente ";nomap" segna le
+                          righe che non devono avere record (.virtual,
+                          definizioni di .struct).
   Opzioni sempre usate: -q -b -o <bin> -L <lst> -E <err>.
 
 ANNOTAZIONI ;@
@@ -102,7 +118,7 @@ NOTE
     perche' 64tass ha il formato classico.
   - tools/check_opcodes.py legge le colonne dalla riga ";Offset ...":
     funziona con tutti e due i formati.
-  - Il 64tass originale non conosce --error-json: con --asm i test di
-    json/ falliscono.
+  - Il 64tass originale non conosce --error-json e --source-map: con
+    --asm i test di json/ e smap/ falliscono.
   - Rapporti: roadMap/fase0_rapporto.txt, roadMap/fase1_rapporto.txt,
-    roadMap/fase2_rapporto.txt.
+    roadMap/fase2_rapporto.txt, roadMap/fase3_rapporto.txt.

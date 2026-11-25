@@ -1,0 +1,21 @@
+; 65tass source map, format 1
+; F <number> <file name>
+; <address> <offset> <length> <file>:<line> [<m|i><file>:<line> ...]
+F 1 src/smap/includes.asm
+F 2 src/smap/inc/smap_a.asm
+F 3 src/smap/inc/sub/smap_b.asm
+F 4 src/smap/inc/sub/smap_c.asm
+2000 2000 1 1:6
+2001 2001 2 2:2 i1:7
+2003 2003 2 3:2 i2:3 i1:7
+2005 2005 2 4:2 i3:3 i2:3 i1:7
+2007 2007 2 4:3 i3:3 i2:3 i1:7
+2009 2009 2 3:4 i2:3 i1:7
+200b 200b 2 2:4 i1:7
+200d 200d 2 4:2 i1:8
+200f 200f 2 4:3 i1:8
+2011 2011 2 4:2 i1:9
+2013 2013 2 4:3 i1:9
+2015 2015 2 4:2 i1:11 m1:13
+2017 2017 2 4:3 i1:11 m1:13
+2019 2019 1 1:14

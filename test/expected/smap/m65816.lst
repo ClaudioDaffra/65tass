@@ -1,0 +1,11 @@
+;Offset  ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/smap/m65816.asm
+
+.018000  c2 30                    rep #$30                  rep #$30
+.018002  a9 34 12                 lda #$1234                lda #$1234
+.018005  a2 78 56                 ldx #$5678                ldx #$5678
+.018008  5c 00 80 02              jml $028000               jml $028000
+.028000  6b                       rtl                       rtl
+
+;******  End of listing

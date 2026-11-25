@@ -1,0 +1,57 @@
+;Offset  ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/smap/includes.asm
+
+.2000    ea                       nop                       nop
+
+;******  Processing file: src/smap/inc/smap_a.asm
+
+.2001    a9 a1                    lda #$a1                  lda #$a1
+
+;******  Processing file: src/smap/inc/sub/smap_b.asm
+
+.2003    a2 b2                    ldx #$b2                  ldx #$b2
+
+;******  Processing file: src/smap/inc/sub/smap_c.asm
+
+.2005    a0 c3                    ldy #$c3                  ldy #$c3
+.2007    84 c3                    sty $c3                   sty $c3
+
+;******  Return to file: src/smap/inc/sub/smap_b.asm
+
+.2009    86 b2                    stx $b2                   stx $b2
+
+;******  Return to file: src/smap/inc/smap_a.asm
+
+.200b    85 a1                    sta $a1                   sta $a1
+
+;******  Return to file: src/smap/includes.asm
+
+
+;******  Processing file: src/smap/inc/sub/smap_c.asm
+
+.200d    a0 c3                    ldy #$c3                  ldy #$c3
+.200f    84 c3                    sty $c3                   sty $c3
+
+;******  Return to file: src/smap/includes.asm
+
+.2011                                               dentro
+
+;******  Processing file: src/smap/inc/sub/smap_c.asm
+
+.2011    a0 c3                    ldy #$c3                  ldy #$c3
+.2013    84 c3                    sty $c3                   sty $c3
+
+;******  Return to file: src/smap/includes.asm
+
+
+;******  Processing file: src/smap/inc/sub/smap_c.asm
+
+.2015    a0 c3                    ldy #$c3                  ldy #$c3
+.2017    84 c3                    sty $c3                   sty $c3
+
+;******  Return to file: src/smap/includes.asm
+
+.2019    60                       rts                       rts
+
+;******  End of listing

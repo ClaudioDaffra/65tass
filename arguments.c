@@ -82,6 +82,12 @@ static const struct arguments_s arguments_default = {
     },
     {0,0,0},     /* tab_size_pos */
     8,           /* tab_size */
+    {            /* source_map */
+        {0,0,0}, /* name_pos */
+        NULL,    /* name */
+        {0,0,0}, /* vice_pos */
+        NULL     /* vice */
+    }
 };
 
 static const struct diagnostics_s diagnostics_default = {
@@ -378,7 +384,8 @@ enum {
     MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND, C256_PGX, C256_PGZ,
     OUTPUT_EXEC, M45GS02, CTAGS_LABELS, CODY_BIN, WDC_BIN, OUTPUT_RECORD_SIZE,
     COLOR_DIAG, AUTO_COLOR_DIAG, NO_COLOR_DIAG, MNONE, LIST_CYCLES, NO_LIST_CYCLES,
-    LIST_CLASSIC, NO_LIST_CLASSIC, ERROR_JSON, ERROR_JSON_APPEND, NO_ERROR_JSON
+    LIST_CLASSIC, NO_LIST_CLASSIC, ERROR_JSON, ERROR_JSON_APPEND, NO_ERROR_JSON,
+    SOURCE_MAP, NO_SOURCE_MAP, SOURCE_MAP_VICE, NO_SOURCE_MAP_VICE
 };
 
 static const struct my_option long_options[] = {
@@ -465,6 +472,10 @@ static const struct my_option long_options[] = {
     {"line-numbers"     , my_no_argument      , NULL,  LINE_NUMBERS},
     {"list-cycles"      , my_no_argument      , NULL,  LIST_CYCLES},
     {"no-list-cycles"   , my_no_argument      , NULL,  NO_LIST_CYCLES},
+    {"source-map"       , my_required_argument, NULL,  SOURCE_MAP},
+    {"no-source-map"    , my_no_argument      , NULL,  NO_SOURCE_MAP},
+    {"source-map-vice"  , my_required_argument, NULL,  SOURCE_MAP_VICE},
+    {"no-source-map-vice",my_no_argument      , NULL,  NO_SOURCE_MAP_VICE},
     {"list-classic"     , my_no_argument      , NULL,  LIST_CLASSIC},
     {"no-list-classic"  , my_no_argument      , NULL,  NO_LIST_CLASSIC},
     {"no-caret-diag"    , my_no_argument      , NULL,  NO_CARET_DIAG},
@@ -546,6 +557,8 @@ static address_t check_outputs(void) {
     if (arguments.list.name != NULL && dash_name(arguments.list.name)) tostdout = true;
     if (arguments.make.name != NULL && dash_name(arguments.make.name)) tostdout = true;
     if (arguments.error.json != NULL && dash_name(arguments.error.json)) tostdout = true;
+    if (arguments.source_map.name != NULL && dash_name(arguments.source_map.name)) tostdout = true;
+    if (arguments.source_map.vice != NULL && dash_name(arguments.source_map.vice)) tostdout = true;
     if (!tostdout) {
         for (i = 0; i < arguments.symbol_output_len; i++) {
             struct symbol_output_s *symbol_output = &arguments.symbol_output[i];
@@ -766,6 +779,10 @@ int init_arguments(int *argc2, char **argv2[]) {
             case NO_LINE_NUMBERS: arguments.list.linenum = false;break;
             case LIST_CYCLES: arguments.list.cycles = true;break;
             case NO_LIST_CYCLES: arguments.list.cycles = false;break;
+            case SOURCE_MAP: arguments.source_map.name = my_optarg; get_arg(&get_args, &arguments.source_map.name_pos); break;
+            case NO_SOURCE_MAP: arguments.source_map.name = NULL; arguments.source_map.name_pos.start = 0; arguments.source_map.name_pos.line = 0; arguments.source_map.name_pos.pos = 0; break;
+            case SOURCE_MAP_VICE: arguments.source_map.vice = my_optarg; get_arg(&get_args, &arguments.source_map.vice_pos); break;
+            case NO_SOURCE_MAP_VICE: arguments.source_map.vice = NULL; arguments.source_map.vice_pos.start = 0; arguments.source_map.vice_pos.line = 0; arguments.source_map.vice_pos.pos = 0; break;
             case LIST_CLASSIC: arguments.list.classic = true;break;
             case NO_LIST_CLASSIC: arguments.list.classic = false;break;
             case 'C': arguments.caseinsensitive = 0;break;
@@ -791,6 +808,7 @@ int init_arguments(int *argc2, char **argv2[]) {
                "        [--simple-labels] [--mesen-labels] [--ctags-labels] [--list=<file>]\n"
                "        [--list-append=<file>] [--no-monitor] [--no-source] [--line-numbers]\n"
                "        [--list-cycles] [--list-classic] [--tab-size=<value>]\n"
+               "        [--source-map=<file>] [--source-map-vice=<file>]\n"
                "        [--verbose-list] [-W<option>]\n"
                "        [--dependencies=<file>] [--dependencies-append=<file>] [--make-phony]\n"
                "        [--output=<file>] [--output-append=<file>] [--output-exec=<expr>]\n"
@@ -935,6 +953,8 @@ int init_arguments(int *argc2, char **argv2[]) {
                "      --list-classic     64tass listing layout (tabs)\n"
                "      --tab-size=<n>     Override the default tab size (8)\n"
                "      --verbose-list     List unused lines as well\n"
+               "      --source-map=<f>   Address to source line map into <file>\n"
+               "      --source-map-vice=<f> Source lines as VICE labels into <file>\n"
                "\n"
                " Floating Point Conversions (Test Tools):\n"
                "  -f32tof40   <number>   Convert a 32-bit float  to 5-byte MBF and print it (C64 BASIC order: exponent, then mantissa Big Endian).\n"

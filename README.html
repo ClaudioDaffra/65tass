@@ -5668,6 +5668,70 @@ including comments and empty lines.
 
 ;******  End of listing
 </pre></dd>
+
+<dt><b>--source-map</b>=&lt;file&gt;<a name="o_source-map" href="#o_source-map"></a>
+<dd>65tass only. Write a source map: for every source line which produces bytes, the
+address, the length and the source file and line, also inside macros and included
+files. For debuggers and other external tools.
+
+<pre>
+65tass --source-map=a.map a.asm -o a.prg
+
+; 65tass source map, format 1
+; F &lt;number&gt; &lt;file name&gt;
+; &lt;address&gt; &lt;offset&gt; &lt;length&gt; &lt;file&gt;:&lt;line&gt; [&lt;m|i&gt;&lt;file&gt;:&lt;line&gt; ...]
+F 1 a.asm
+F 2 inc/io.asm
+1000 1000 2 1:11
+1002 1002 2 1:7 m1:12
+1004 1004 1 1:3 m1:8 m1:12
+1009 1009 1 2:2 i1:13
+0400 100f 2 1:21
+</pre>
+
+<p>Lines starting with <q><code>;</code></q> are comments. <q><code>F</code></q> records number the
+files (the names as in the diagnostic messages). Every other record is:</p>
+<dl>
+<dt><code>address</code><dd>CPU address of the first byte in hexadecimal, as seen by the labels (in a <code>.logical</code> block the logical address; 24 bits on the 65816)</dd>
+<dt><code>offset</code><dd>compile offset of the first byte in hexadecimal, as the ;Offset column of the listing</dd>
+<dt><code>length</code><dd>number of bytes in decimal</dd>
+<dt><code>file:line</code><dd>the line which produced the bytes. In a macro this is the line of the macro body.</dd>
+<dt>callers<dd>where it was called from, nearest first, up to the source file on the command line: <q><code>m</code></q> is a macro, structure or function call (<code>.dstruct</code> too), <q><code>i</code></q> is an <code>.include</code> or <code>.binclude</code>.</dd>
+</dl>
+
+<p>In the example above $1004 is line 3 (in a macro), called by line 8 (in another macro), called by line 12.</p>
+
+<p>There's one record for each processed line, in the order of assembly (not sorted
+by address): a line repeated by <code>.rept</code> or a macro called twice gives more
+records for the same line. Only bytes which go to the output are listed, so
+<code>.virtual</code> blocks and structure definitions are left out. Like the listing,
+the source map needs an additional pass and isn't written if there are errors. A file
+which can't be written is a fatal error. The file is listed as a target with
+<q><code>--dependencies</code></q>.</p></dd>
+
+<dt><b>--source-map-vice</b>=&lt;file&gt;<a name="o_source-map-vice" href="#o_source-map-vice"></a>
+<dd>65tass only. The same records as <q><a href="#o_source-map"><code>--source-map</code></a></q>, as a
+VICE monitor label file: one label per record, named after the file (without directory
+and extension, other characters than letters, digits and <q><code>_</code></q> changed to
+<q><code>_</code></q>) and the line. A line which comes again gets <q><code>_2</code></q>, <q><code>_3</code></q>...
+
+<pre>
+65tass --source-map-vice=lines.lbl a.asm -o a.prg
+
+al 1000 .a_11
+al 1002 .a_7
+al 1009 .io_2
+al 100d .a_15
+al 100e .a_15_2
+</pre>
+
+<p>In the VICE monitor load it with <q><code>ll "lines.lbl"</code></q> (also together with the
+<q><code>--vice-labels</code></q> file): the monitor shows these names at the addresses, so the
+source line of an instruction can be seen while debugging. Macro lines get the name of
+the macro's file and line.</p></dd>
+
+<dt><b>--no-source-map</b>, <b>--no-source-map-vice</b><a name="o_no-source-map" href="#o_no-source-map"></a>
+<dd>Do not write the source map files (cancels an earlier option).</dd>
 </dl>
 
 <h3>Floating point conversion tools<a name="commandline-float" href="#commandline-float"></a></h3>

@@ -56,6 +56,7 @@
 #include "listobj.h"
 #include "floatobj.h"
 #include "cycles.h"
+#include "sourcemap.h"
 #include "codeobj.h"
 #include "strobj.h"
 #include "addressobj.h"
@@ -546,6 +547,11 @@ static void memskip(address_t db, linepos_t epoint) {
  * output one byte
  */
 FAST_CALL uint8_t *pokealloc(address_t db, linepos_t epoint) {
+    /* 65tass source map: only bytes that reach the output, not .virtual,
+       structure definitions or .function bodies (own section address) */
+    if (source_map_active && current_address == &current_section->address) {
+        source_map_add(current_address->l_address, current_address->address, db);
+    }
     if (current_address->moved) {
         if (current_address->address < current_address->start) err_msg2(ERROR_OUTOF_SECTION, NULL, epoint);
         if (current_address->wrapwarn) {err_msg_mem_wrap(epoint);current_address->wrapwarn = false;}
@@ -6431,18 +6437,20 @@ int main2(int *argc2, char **argv2[]) {
         if (signal_received) { err_msg_signal(); break; }
     } while (!fixeddig || constcreated);
 
-    if (arguments.list.name == NULL) {
+    if (arguments.list.name == NULL && arguments.source_map.name == NULL && arguments.source_map.vice == NULL) {
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
     }
     failed = error_serious();
     if (!failed) {
-        /* assemble again to create listing */
-        if (listing_open(&arguments.list, argc, argv)) {
+        /* assemble again to create listing (65tass: and source map) */
+        bool list_open = listing_open(&arguments.list, argc, argv);
+        if (source_map_open() || list_open) {
             nolisting = 0;
 
             max_pass = pass; pass++;
             one_pass(argc, argv, opts);
             listing_close(&arguments.list);
+            source_map_close();
 
             if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
         }

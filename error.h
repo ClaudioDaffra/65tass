@@ -119,6 +119,8 @@ extern void error_reset(void);
 extern bool error_print(const struct error_output_s *);
 extern const struct file_list_s *parent_file_list(const struct file_list_s *);
 extern void enterfile(struct file_s *, linepos_t);
+extern void enterfile_macro(struct file_s *, linepos_t);
+extern const struct file_list_s *file_list_caller(const struct file_list_s *, bool *);
 extern void exitfile(void);
 extern void err_init(const char *);
 extern void err_destroy(void);

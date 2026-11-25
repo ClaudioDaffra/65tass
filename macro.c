@@ -436,7 +436,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
         macro_parameters.current->all.len = npoint.pos - opoint.pos;
     }
     if (t == W_ENDS) {
-        enterfile(macro->file_list->file, epoint);
+        enterfile_macro(macro->file_list->file, epoint);
         if (context != NULL) push_context(context);
         val = compile();
         if (context != NULL) pop_context();
@@ -453,7 +453,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
         }
         s->addr = star;
         star_tree->vline = vline; star_tree = s; vline = s->vline;
-        enterfile(macro->file_list->file, epoint);
+        enterfile_macro(macro->file_list->file, epoint);
         lpoint.line = macro->line;
         new_waitfor(t, epoint);
         if (context != NULL) push_context(context);
@@ -580,7 +580,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
         }
         s->addr = star;
         star_tree->vline = vline; star_tree = s; vline = s->vline;
-        enterfile(mfunc->file_list->file, epoint);
+        enterfile_macro(mfunc->file_list->file, epoint);
         lpoint.line = mfunc->epoint.line;
         new_waitfor(W_ENDF2, epoint);
         oldbottom = context_get_bottom();
@@ -941,7 +941,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
     }
     if (tuple != NULL) val_destroy(Obj(tuple));
     else if (i < args) err_msg_argnum(args, i, i, &vals[i].epoint);
-    enterfile(mfunc->file_list->file, epoint);
+    enterfile_macro(mfunc->file_list->file, epoint);
     {
         struct linepos_s opoint = lpoint;
         const uint8_t *opline = pline;

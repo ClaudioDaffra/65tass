@@ -1,0 +1,18 @@
+;Offset  ;PC      ;Hex                     ;Monitor          ;Source
+
+;******  Processing input file: src/smap/layout.asm
+
+>081d             01 02 03 04 05 06 07 08                    tabella .byte 1,2,3,4,5,6,7,8,9,10      ; 10 byte: due righe nel listing
+>0825             09 0a
+.0801             ad 1d 08                 lda $081d                 lda tabella
+.c000             a9 01                    lda #$01                  lda #1                          ;nomap
+.0805    0400     a9 02                    lda #$02          copia   lda #2                          ; indirizzo $0400, offset $0805
+.0807    0402     4c 00 04                 jmp $0400                 jmp copia
+>080a             ea ea ea                                           .fill 3, $ea
+>080d             00 00 00                                           .align 4, $00
+>0810             63 69 61 6f 20 64 61 6c                            .text "ciao dal 6502"
+>0818             20 36 35 30 32
+.0804             60                       rts                       rts
+.0827             00                       brk #                     brk
+
+;******  End of listing

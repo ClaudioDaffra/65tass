@@ -1,0 +1,166 @@
+65TASS - FASE 3 (SOURCE MAP REALE): RAPPORTO
+===========================================
+
+Data: 2026-11-25. Base: 65tass dopo la Fase 2, versione "1.60.3243+".
+
+SINTESI
+-------
+- Nuova opzione --source-map=<file>: per ogni riga sorgente che produce
+  byte, indirizzo CPU, offset, lunghezza, file e riga, anche dentro macro
+  e file inclusi, con la catena dei chiamanti fino al sorgente principale.
+- Nuova opzione --source-map-vice=<file>: gli stessi record come etichette
+  del monitor di VICE ("al 1000 .main_11").
+- --no-source-map e --no-source-map-vice. Tutto spento di default: binari,
+  listing e messaggi non cambiano (57 test di prima uguali; binari
+  confrontati con e senza --source-map: identici).
+- Verifica indipendente: tools/check_srcmap.py confronta ogni record con
+  il listing della stessa passata e con le righe dei file sorgente.
+- Suite: 61 test, tutti verdi (4 nuovi in test/src/smap).
+
+
+1. DA DOVE VENGONO I DATI
+-------------------------
+  Si e' partiti da quello che 65tass gia' sapeva:
+  - tutti i byte dell'output passano da pokealloc() (64tass.c): li'
+    current_address->l_address e' l'indirizzo CPU (quello delle etichette)
+    e current_address->address l'offset (la colonna ;Offset del listing);
+  - file e riga correnti sono current_file_list e lpoint.line; dentro una
+    macro sono il file e la riga del corpo della macro;
+  - la catena dei chiamanti e' l'albero dei file_list (error.c), lo stesso
+    che i messaggi usano per "In file included from" e che la Fase 2 mette
+    in "included_from".
+  --line-numbers del listing e --ctags-labels danno solo la riga del file
+  corrente o delle etichette: non bastano per le macro, quindi la source
+  map usa direttamente questi dati.
+
+  Escluse le parti che non vanno nell'output: .virtual, definizioni di
+  .struct/.union e corpi di .function usano un proprio section_address,
+  quindi pokealloc() registra solo se current_address e' l'indirizzo della
+  sezione corrente.
+
+  Macro o include: enterfile() non lo distingueva. Ora macro.c chiama
+  enterfile_macro() (macro, .dstruct/.dunion, funzioni) e il nodo del
+  file_list ricorda il tipo (campo macro); file_list_caller() restituisce
+  il chiamante e il tipo.
+
+
+2. FORMATO TESTO (--source-map)
+-------------------------------
+  ; 65tass source map, format 1
+  ; F <number> <file name>
+  ; <address> <offset> <length> <file>:<line> [<m|i><file>:<line> ...]
+  F 1 src/smap/macros.asm
+  F 2 src/smap/inc/smap_macro.asm
+  1000 1000 2 1:17 m1:23
+  1004 1004 1 1:10 m1:14 m1:18 m1:23
+  100e 100e 2 2:4 m1:30
+
+  - righe con ";": commenti; "F n nome": tabella dei file (nome come nei
+    messaggi d'errore), numerati in ordine di comparsa;
+  - address: indirizzo CPU esadecimale (in .logical quello logico, a 24 bit
+    sul 65816); offset: offset di compilazione esadecimale; length: byte
+    in decimale; file:riga della riga che ha prodotto i byte;
+  - chiamanti dal piu' vicino: m = chiamata di macro, struttura o funzione,
+    i = .include/.binclude. Esempio: $1004 e' la riga 10 (corpo di
+    livello3), chiamata dalla riga 14 (in livello2), chiamata dalla 18 (in
+    livello1), chiamata dalla 23;
+  - un record per ogni riga elaborata, nell'ordine di assemblaggio: i byte
+    della stessa riga si uniscono in un record, ma due ripetizioni di
+    .rept (o due chiamate della stessa macro) restano separate, cosi' un
+    debugger conosce l'inizio di ogni istruzione. Per tenerle separate si
+    usa vline, il contatore delle righe elaborate di 65tass.
+
+  Scelta del formato: testo a righe, facile da leggere a mano e da usare
+  con awk/grep o da un programma; numeri di file invece dei nomi ripetuti.
+  Il JSON della Fase 2 resta per la diagnostica; un formato per un
+  debugger vero (DAP) si potra' generare da questo nella Fase 9.
+
+
+3. FORMATO VICE (--source-map-vice)
+-----------------------------------
+  al 1000 .macros_17
+  al 1004 .macros_10
+  al 1007 .macros_10_2
+  al 100e .smap_macro_4
+
+  - stesso formato di --vice-labels ("al <hex> .<nome>", indirizzo a 24
+    bit come le etichette VICE di 64tass);
+  - nome = file senza cartella ed estensione (altri caratteri -> "_"),
+    poi "_" e la riga; "_2", "_3"... quando la stessa riga torna;
+  - si carica nel monitor con ll "file", anche insieme alle etichette di
+    --vice-labels. NON provato in VICE (non installato qui): il formato e'
+    quello che 65tass usa gia' per --vice-labels.
+
+
+4. QUANDO VIENE SCRITTA
+-----------------------
+  - Nella passata finale in piu', la stessa del listing: se c'e' -L la
+    passata e' una sola per tutti e due. Senza errori soltanto, come il
+    listing.
+  - File non scrivibile: nuovo errore fatale "can't write source map file"
+    (ERROR_CANT_WRTE_SRC), con la posizione sulla riga di comando; codice
+    di uscita 1.
+  - "-" = standard output (senza il riepilogo finale).
+  - Con -M i file sono elencati fra i target.
+  - -Wunused: il controllo si fa una volta sola, dopo la passata finale,
+    come con il listing.
+
+
+5. VERIFICA
+-----------
+  test/src/smap (con ";; srcmap: yes"):
+    macros    macro annidate su tre livelli con parametri (\1, \nome,
+              \nome+1), una macro definita in un file incluso e chiamata dal
+              principale (catena m, non i), .rept dentro una macro (tre
+              record per la stessa riga, _2 _3 nelle etichette VICE),
+              .dstruct (catena m) e la definizione della struttura esclusa
+    includes  include su tre livelli (catena i3:3 i2:3 i1:7), lo stesso
+              file incluso piu' volte, .binclude, .include dentro una macro
+              (catena i poi m)
+    layout    .logical (indirizzo $0400, offset $0805), sezioni messe con
+              .dsection dopo la definizione, .virtual esclusa, .fill,
+              .align, dati di piu' di 8 byte (due righe nel listing, un
+              record)
+    m65816    indirizzi a 24 bit ($018000, $028000)
+  Oltre al confronto con gli attesi, tools/check_srcmap.py controlla:
+  stesso offset, indirizzo (;PC) e numero di byte del listing, nello
+  stesso ordine; testo di file:riga uguale alla colonna ;Source (con i
+  parametri delle macro liberi); chiamanti m su righe che chiamano una
+  macro e i su righe .include; nessuna riga del listing con byte senza
+  record, tranne quelle segnate ";nomap". Prova negativa: riga sbagliata,
+  m al posto di i, record mancante, indirizzo e lunghezza sbagliati:
+  tutti segnalati.
+  Prove a mano: errore nel sorgente (nessuna mappa, rc 1), file non
+  scrivibile (rc 1), -M, -Wunused (un solo avviso), binari identici con e
+  senza --source-map su smap/*, cpu/6502, cyc/totals_6502.
+  Compilazione con -Wall -Wextra: 0 avvisi.
+
+
+6. CODICE TOCCATO
+-----------------
+  sourcemap.c/.h   nuovi: raccolta dei record, file di testo e VICE
+  64tass.c         pokealloc() registra i byte; passata finale anche per
+                   la source map; -Wunused una volta sola
+  error.c/.h       enterfile_macro(), file_list_caller(), campo macro nel
+                   nodo del file_list; messaggio "can't write source map
+                   file"
+  errors_e.h       ERROR_CANT_WRTE_SRC
+  macro.c          enterfile_macro() per macro, strutture e funzioni
+  arguments.c/.h   --source-map, --source-map-vice, --no-...; help, usage
+  file.c           i file fra i target di -M
+  makefileLinuxGCC, makefileWindowsMingw, makefileWindowsCL: sourcemap.o
+  test/run_tests.sh   ";; srcmap: yes"; test/tools/check_srcmap.py
+  README.txt, README.html, 64tass.1, README.md, NEWS, test/LEGGIMI.txt,
+  roadMap/roadMap.txt: documentazione
+
+
+7. LIMITI E PROSSIMI PASSI
+--------------------------
+  - Solo la riga, non la colonna: per un debugger basta, e dentro le macro
+    la colonna della riga espansa non e' quella del file.
+  - Le etichette VICE vanno provate in VICE; con due file con lo stesso
+    nome in cartelle diverse i nomi coincidono (si distinguono solo con
+    _2, _3).
+  - Nessun "step" di VICE sul sorgente: VICE non legge source map; serve
+    lo strumento esterno della Fase 9 (VICE remote monitor + questa mappa).
+  - Build Windows (MinGW, MSVC) non provata: compilatori non installati.

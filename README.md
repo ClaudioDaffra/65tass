@@ -163,6 +163,24 @@ characters from 1, `included_from` is the include chain and `notes` the notes
 of the message. `--error-json-append` appends, `--no-error-json` turns it off.
 See README.txt for the details.
 
+## Source map
+
+`--source-map=<file>` writes, for every source line which produces bytes, the
+CPU address, the offset, the length and the file and line, also inside macros
+and included files, with the chain of callers (`m` macro, `i` include):
+
+    65tass --source-map=a.map a.asm -o a.prg
+
+    F 1 a.asm
+    F 2 inc/io.asm
+    1000 1000 2 1:11
+    1004 1004 1 1:3 m1:8 m1:12
+    1009 1009 1 2:2 i1:13
+    0400 100f 2 1:21
+
+`--source-map-vice=<file>` gives the same lines as VICE monitor labels
+(`al 1004 .a_3`). See README.txt for the details.
+
 ## Tests
 
 `test/` holds a regression suite: one source per CPU (all 256 opcodes for the

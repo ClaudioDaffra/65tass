@@ -108,6 +108,13 @@ struct make_output_s {
     bool append;
 };
 
+struct source_map_output_s {   /* 65tass: --source-map, --source-map-vice */
+    struct argpos_s name_pos;
+    const char *name;
+    struct argpos_s vice_pos;
+    const char *vice;
+};
+
 struct arguments_data_s {
     uint8_t *data;
     size_t len;
@@ -143,6 +150,7 @@ struct arguments_s {
     struct error_output_s error;
     struct argpos_s tab_size_pos;
     unsigned int tab_size;
+    struct source_map_output_s source_map;
 };
 
 struct diagnostics_s {

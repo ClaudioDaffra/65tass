@@ -1,0 +1,13 @@
+; 65tass source map, format 1
+; F <number> <file name>
+; <address> <offset> <length> <file>:<line> [<m|i><file>:<line> ...]
+F 1 src/smap/layout.asm
+081d 081d 10 1:8
+0801 0801 3 1:10
+0400 0805 2 1:16
+0402 0807 3 1:17
+080a 080a 3 1:19
+080d 080d 3 1:20
+0810 0810 13 1:21
+0804 0804 1 1:24
+0827 0827 1 1:26
